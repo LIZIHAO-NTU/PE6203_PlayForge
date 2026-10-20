@@ -9,4 +9,3 @@ A visible native button #restart labelled Restart is always enabled. Clicking it
 Show score as a bare integer in #score and phase as exactly Playing or Won in #phase. Put the visible game interface inside a region with data-game-surface, at least 200 by 120 CSS pixels. Include concise instructions. Expose only a read-only window.__gameTest.getState() returning the actual {score,phase}, consistent with visible values. Do not add setters or test-specific alternative behavior.
 
 Keep self-checks short and execute them from independent fresh pages. Use actual clicks, visible text and read-only state observations. If terminal controls are disabled, do not force a click on a disabled button. This is a development experiment, not any formal S1–S5 specification.
-
