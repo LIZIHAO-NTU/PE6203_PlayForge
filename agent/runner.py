@@ -332,7 +332,7 @@ def run(config, spec_path, output, max_rounds=3, max_calls=8, max_seconds=600,
                 current_failure = (plan_hash, fingerprint) if fingerprint else None
                 identical_failures = identical_failures + 1 if current_failure and current_failure == last_failure else (1 if current_failure else 0)
                 last_failure = current_failure
-                result["repair_route"] = route_failure(result, summary["plan_review"], identical_failures >= 2)
+                result["repair_route"] = route_failure(result, summary["plan_review"], identical_failures >= 2, plan=plan)
                 trace.save(f"attempts/{round_number:02d}/verification.json", result)
                 elapsed = round(time.monotonic() - started, 3)
                 entry = {"round": round_number, "bundle_valid": True,

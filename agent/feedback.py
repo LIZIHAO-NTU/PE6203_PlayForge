@@ -36,6 +36,25 @@ def validation_feedback(error, draft=None):
 
 def repair_feedback(result, plan):
     packet = compact_failure(result)
+    # Recent history may omit the failed action, especially on interaction
+    # timeout. Never label an earlier observation as the failed-step evidence.
+    raw_failures = {test['id']: test for test in result.get('tests', [])
+                    if test.get('passed') is not True}
+    for item in packet['failed_tests']:
+        raw = raw_failures[item['id']]
+        observations = raw.get('observations', [])
+        index = raw.get('failed_step')
+        item['history_omitted'] = {
+            'actions': max(0, len(raw.get('actions', [])) - len(item['actions'])),
+            'observations': max(0, len(observations) - len(item['observations']))}
+        item['failure_observation'] = next(
+            (obs for obs in reversed(item['observations'])
+             if type(index) is int and index > 0 and type(obs.get('step')) is int
+             and obs['step'] == index), None)
+        item['observation_scope'] = (
+            'observations contains recent history, not necessarily the failed step. '
+            'failure_observation is null when no retained observation matches that step; '
+            'null does not prove a code defect or test conflict. Full history remains in traces.')
     tests = {test["id"]: test for test in plan.get("tests", [])}
     requirements = {item["id"]: item["text"] for item in plan.get("requirements", [])}
     scenarios = []
