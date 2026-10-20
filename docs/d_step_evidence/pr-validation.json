@@ -48,5 +48,16 @@
       "skipped": 0
     },
     "isolated_combination_only": true
+  },
+  "english_presentation_update": {
+    "changed": "Markdown report labels and documentation only; original embedded evidence bytes retained",
+    "focused_with_browser": {
+      "discovered": 23,
+      "passed": 23,
+      "skipped": 0
+    },
+    "initial_attempt": "Three browser calibrations could not find Chromium because PLAYWRIGHT_BROWSERS_PATH was omitted; rerun with the existing browser cache passed.",
+    "new_real_model_api_calls": 0,
+    "current_tool_sha256": "c86038386e531dfc139cdb809d16f4f2487b6f7a5ae6dbeebeb6db884440ef28"
   }
 }
