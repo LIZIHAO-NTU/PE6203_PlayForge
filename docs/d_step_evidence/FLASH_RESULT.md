@@ -1,61 +1,61 @@
-# 快速模型重跑：已取得真实游戏与逐步执行证据
+# Fast-model development runs: real game and execution evidence
 
-日期：2026-10-20。开发实验切换快速模型重新运行。开发需求、原 Agent 代码、审计代码和验收标准均未更改，只切换模型及为第二个快速模型分配剩余请求上限。
+Date: 2026-10-20. The development experiment was retried with faster models. The development requirement, original Agent code, audit logic and acceptance criteria were unchanged; only model selection and the remaining request allowance for the second fast model changed.
 
-## 运行记录（分别保留，不混算成功率）
+## Run history: separate outcomes, no combined success rate
 
-| 运行目录 | 模型 | 实际请求/成功响应 | 结果 |
+| Run directory | Model | Requests / successful responses | Outcome |
 |---|---|---|---|
-| d_step_pilot_20261020_01 | deepseek/deepseek-v3.2 | 2/0 | 规划请求两次超时；用量未知，无游戏 |
-| d_step_pilot_20261020_02_flash | google/gemini-2.5-flash-lite | 2/2 | 两次规划响应各约 8 秒，但先缺 state_contract，修正后 development_plan 项格式仍不合法；无游戏 |
-| d_step_pilot_20261020_03_flash | google/gemini-2.5-flash | 2/2 | 规划有效，首次生成后真实 Chromium 自测通过 |
+| d_step_pilot_20261020_01 | deepseek/deepseek-v3.2 | 2/0 | Two planning request timeouts; usage unknown; no game |
+| d_step_pilot_20261020_02_flash | google/gemini-2.5-flash-lite | 2/2 | Planning responses took about 8 seconds each; first lacked state_contract, then development_plan items remained invalid after correction; no game |
+| d_step_pilot_20261020_03_flash | google/gemini-2.5-flash | 2/2 | Valid plan; real Chromium self-tests passed after first generation |
 
-本次两种快速模型运行合计 4 次请求。加上此前 DeepSeek 的超时尝试，全部历史为 6 次请求尝试，其中 2 次用量未知。不能将它们写成 6 次成功生成。
+The two fast-model runs used four requests. Including earlier DeepSeek timeouts, the history contains six request attempts, two with unknown usage. These are not six successful generations.
 
-## 成功运行的原始结果
+## Original successful-run results
 
-- 原始状态：`automated_passed_manual_pending`，不是完整游戏验收。
-- 总耗时：27.528 秒；规划 API 18.837 秒，生成 API 4.660 秒。
-- API 请求：2；输入 8730 tokens，输出 4447 tokens，账单金额未推算。
-- 游戏：`runs/d_step_pilot_20261020_03_flash/run/game/`。
-- 真实浏览器原始清单：1 份，来自第 1 轮；包含 6 项自测，46 个步骤、32 条观察记录。
-- 新审计：6 项通过结论均有对应步骤和观察支持，没有发现该次原始轨迹的证据缺口。
-- 原计划及每轮源码指纹匹配，原始运行文件在审计前后保持不变。
+- Original status: automated_passed_manual_pending, not full game acceptance.
+- Total elapsed time: 27.528 seconds; planning API 18.837 seconds, generation API 4.660 seconds.
+- API requests: 2; input 8730 tokens, output 4447 tokens. No billing amount was inferred.
+- Game location: runs/d_step_pilot_20261020_03_flash/run/game/.
+- One original real-browser manifest from round 1, containing six self-tests, 46 steps and 32 observations.
+- Independent audit: all six passing conclusions were supported by their steps and observations; no evidence gap was found in this original trace.
+- Plan and per-round source fingerprints matched; original run files were unchanged by auditing.
 
-场景为初态、收集加分、获胜、获胜后输入无效、获胜后重开和初态重开。它们只是提供真实轨迹的开发样例，不登记为正式 S1—S5，也不证明自测覆盖完整原需求。
+The scenarios cover initial state, collection/scoring, winning, ignored input after winning, restart after winning, and restart from the initial state. They provide a real development trace, are not formal S1-S5 cases, and do not prove full requirement coverage.
 
-## 基于真实轨迹的受控证据副本实验
+## Controlled evidence-copy experiment
 
-选取原始 T2 的通过记录，复制后分别构造以下情况。原游戏、原计划、原执行清单与原成绩全部不改。
+Copies of the original passing T2 record were changed separately. The original game, plan, execution manifest and score were preserved.
 
-| 受控副本 | 原门禁仍接受整体通过 | 新步骤审计识别问题 |
+| Controlled copy | Original gate still accepts overall pass | Independent step audit detects issue |
 |---|---|---|
-| 删除输入操作记录 | 是 | 是 |
-| 删除断言观察记录 | 是 | 是 |
-| 操作标为失败，但通过标记保留 | 是 | 是 |
-| 重复一条操作记录 | 是 | 是 |
-| 操作参数与冻结计划不符 | 是 | 是 |
+| Remove input action record | Yes | Yes |
+| Remove assertion observation | Yes | Yes |
+| Mark action unsuccessful, retain pass flag | Yes | Yes |
+| Duplicate an action record | Yes | Yes |
+| Change action arguments from the frozen plan | Yes | Yes |
 
-这里的 5/5 是五种预先定义的受控记录异常被检测到，不是模型错误率。原门禁信任执行器按完整流程产生记录，本实验揭示它缺少独立步骤一致性复核的防御边界；不能据此断言正常运行一定漏执行或伪造记录。
+The 5/5 result means five predefined controlled record anomalies were detected, not a model error rate. The original gate trusts the verifier to produce complete records; this experiment identifies a boundary where independent step consistency checks can add protection. It does not show that normal execution necessarily omits or fabricates records.
 
-## 当前可支持的结论
+## Supported conclusions and limits
 
-1. 已完成一次真实模型生成＋真实浏览器执行，并审计其实际轨迹，不只是模拟结果。
-2. 该次原始通过记录的步骤与观察完整一致，未发现实际虚假通过。
-3. 受控异常副本中，原门禁的测试级标记不足以识别步骤证据缺口；独立审计可识别所测五类异常。
-4. 目前交付的是评估工具及有界证据，不是已经给生产门禁打补丁。先交 C 审查，再与 A 讨论是否需要集成及如何兼容历史记录。
+1. One real model-generated game was executed in a real browser and its actual trace was audited.
+2. That natural passing trace had complete, consistent steps and observations; no actual false pass was found.
+3. In controlled copies, test-level pass flags alone did not expose step-evidence gaps; the independent audit detected all five tested anomaly types.
+4. The deliverable is an evaluation tool with bounded evidence, not an applied production-gate patch. C reviews the work; any integration and historical-record compatibility decision belongs with A.
 
-局限：单份简单开发需求、一次成功生成，不能推算所有模型/游戏的可靠性；未触发真实修复循环，修复轮次的审计覆盖仍需后续实验。日志一致不证明执行器没有恶意伪造，也不证明游戏规则和测试预期正确。
+Limits: one simple development requirement and one successful generation cannot establish reliability across all games or models. No natural repair loop occurred, so later-round auditing needs further experiments. Consistent logs do not prove that a verifier is non-malicious or that game rules and test expectations are correct.
 
-## 证据位置
+## Evidence locations
 
-- 成功运行：`runs/d_step_pilot_20261020_03_flash/EXPERIMENT.json`、`run/summary.json`。
-- 原始浏览器记录：`run/traces/attempts/01/evidence/replay.json`，同目录保留截图。
-- 审计及副本：`audit/AUDIT.json`、`audit/01_evidence/controlled_mutations.json`。
-- 本目录 `flash-runs-summary.json` 为脱敏汇总，不含 key、原始请求正文或模型响应全文。
+- Successful run: runs/d_step_pilot_20261020_03_flash/EXPERIMENT.json and run/summary.json.
+- Original browser record: run/traces/attempts/01/evidence/replay.json, with local screenshots beside it.
+- Audit and copies: audit/AUDIT.json and audit/01_evidence/controlled_mutations.json.
+- Published flash-runs-summary.json: sanitized history without keys, raw request bodies or full model responses.
 
-首轮超时记录在 `PILOT_RESULT.md` 中保留；不能用本次成功覆盖它。后续不自动增加调用或修正游戏。
+The initial timeout history remains in the local PILOT_RESULT.md; later success does not replace it. No further calls or game corrections are automatic.
 
-## 本 PR 可直接复现的证据
+## Evidence directly reproducible from this PR
 
-上述 runs/ 为本机历史目录，Git 忽略。精选原始文件按字节打包到同目录 flash-evidence.json；文件结构、排除项和复现命令见 README.md。审计的 6 项支持通过和五类受控异常检测无需重新调用 API 即可核对。
+The runs/ paths above are local, Git-ignored history. Selected original bytes are packaged in flash-evidence.json; see README.md for structure, exclusions and the reproduction command. Six supported passes and five controlled anomaly detections can be checked without another API call. The later English report-label update does not alter these original evidence files.
