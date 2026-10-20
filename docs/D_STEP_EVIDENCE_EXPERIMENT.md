@@ -1,57 +1,55 @@
-# D：通过结论的逐步执行证据审计
+# D: Step-by-step execution evidence audit
 
-本 PR 只增加独立评估工具、测试、开发样例和复现证据，不修改 agent/ 或自动接入生产门禁。基于团队共同开发基线 `4cabc9faf01c859a0d5ee45110c1c624df94e544`；不是正式冻结版。
+This PR adds a standalone evaluation tool, tests, a development specification and reproducible evidence. It does not modify agent/ or integrate a production gate. The common development baseline is 4cabc9faf01c859a0d5ee45110c1c624df94e544, not a final frozen candidate.
 
-## 技术问题和方法
+## Technical question and method
 
-当测试报告 passed=true 时，冻结计划中的操作与观察是否完整记录，步骤、参数、准备／检查阶段和结果是否一致？工具读取每轮 replay.json，逐步核对动作，重算所支持的断言比较，并核验计划与当轮源码指纹。失败项保持非通过，不把未执行尾部补成成功；没有浏览器清单标为未验证。
+When a test reports passed=true, do its recorded actions and observations support that conclusion? The auditor reads each round's replay.json, checks step coverage, arguments, setup/check stages and results, recomputes supported assertion comparisons, and checks plan and per-round source fingerprints. Recorded failures remain failures; unexecuted tails are not invented. Runs without browser manifests are unverified.
 
-在有完整通过项的记录副本上，分别删除输入、删除观察、保留通过标记但把动作设为失败、重复动作、修改动作参数。对比旧门禁与独立审计。副本不改变游戏、原计划、原记录或原成绩，不计为真实模型错误。
+For a complete passing record, five separate copies remove an input, remove an observation, mark an action unsuccessful while retaining its pass flag, duplicate an action, or change its arguments. The original gate and independent auditor are compared. Copies do not change the original game, plan, records or score, and do not count as actual model failures.
 
-## 入口与复现（仓库根目录）
+## Reproduction from the repository root
 
-先按项目 README 安装 Python 3.10+ 和 requirements.txt。本轮实际为 Python 3.14.3、Playwright 1.63.0、Chromium 153.0.8010.12（Darwin arm64）。Windows 可将 python 替换为自己的虚拟环境解释器路径。
+Install Python 3.10+ and requirements.txt as described in the project README. The validation environment used Python 3.14.3, Playwright 1.63.0 and Chromium 153.0.8010.12 on Darwin arm64. On Windows, use your virtual environment's Python executable.
 
-### 零 API、零浏览器：复现随包真实记录审计
+### Audit the published real trace: no API or browser
 
-```sh
-python -B -m evals.step_evidence_replay --output reports/d_published_reaudit_new
-```
+    python -B -m evals.step_evidence_replay --output reports/d_published_reaudit_new
 
-输出必须为不存在的新目录。入口读取 docs/d_step_evidence/flash-evidence.json，逐项校验原文件哈希后恢复六份精选原文件，在新目录生成审计。证据只用作评估，不是生成器读取的游戏模板。没有原始 API 正文、密钥或正式 S1—S5 答案。
+The output directory must not exist. The entry point validates hashes in docs/d_step_evidence/flash-evidence.json, restores six selected original files, and writes an independent audit into the new directory. Evidence is for evaluation, not a game template supplied to the generator. Raw API bodies, keys and formal S1-S5 acceptance answers are excluded.
 
-预期：1 份清单；6 项记录支持通过；计划／当轮游戏指纹一致；5 种受控异常检出。部分原轨迹文件（API 正文、截图等）未公开，因此复制件的文件总清单短于本机完整原报告；不要求整份 AUDIT.json 逐字相同。
+Expected results: one manifest, six supported passing tests, matching plan/per-round game hashes, and all five controlled anomalies detected. Some original artifacts, including API bodies and screenshots, are not published, so the copied inventory is smaller than the full local report; the entire AUDIT.json need not be byte-identical.
 
-### 零 API：审计其他已有运行
+### Audit another existing run: no API
 
-```sh
-python -B -m evals.step_evidence audit runs/EXISTING_RUN/run --output reports/d_audit_new
-```
+    python -B -m evals.step_evidence audit runs/EXISTING_RUN/run --output reports/d_audit_new
 
-这只读取给定运行，不生成游戏、不启动浏览器、不改写原成绩。原运行需 summary.json 和 traces/attempts/*/evidence/replay.json；当轮 game/ 应与 evidence/ 同级。输出不能覆盖既有目录。
+This reads the specified run without generating a game, starting a browser or changing original scores. The run should contain summary.json and traces/attempts/*/evidence/replay.json; each round's game/ should be beside evidence/. Existing output directories cannot be overwritten.
 
-### 校准与回归
+### Calibration and regression
 
-```sh
-python -B -m unittest discover -s tests -p 'test_step_evidence*.py' -v
-```
+    python -B -m unittest discover -s tests -p 'test_step_evidence*.py' -v
 
-三项真实浏览器校准默认跳过，启用 MVP_BROWSER_TESTS=1 并安装 Playwright Chromium 后再运行同一命令。使用已安装 Edge 时按项目说明设置 PLAYWRIGHT_CHANNEL=msedge。浏览器校准使用合成夹具，零模型 API，不是新的自主生成样本。最新本轮提交验证见 d_step_evidence/pr-validation.json。提交期间 main 合入 C 的聚焦修复后，另在 main c414c91＋D 文件的隔离组合上复核了 23 项相关测试（含浏览器）和 334 项默认回归（284 通过、50 跳过）；这不等于正式候选冻结。
+Three real-browser calibration tests skip by default. Install Playwright Chromium and set MVP_BROWSER_TESTS=1 to enable them with the same command. For installed Edge, follow the project's PLAYWRIGHT_CHANNEL=msedge instructions. Browser calibration uses synthetic fixtures and no model API; it is not another autonomous generation sample.
 
-### 可选真实生成（会调用 API，不是复现已有记录的必要步骤）
+Current PR validation is recorded in d_step_evidence/pr-validation.json. After C's focused fixes were merged during submission preparation, an isolated combination of main c414c91 and these D files passed all 23 focused tests including browser calibration; the default regression discovered 334 tests, with 284 passed and 50 skipped. This compatibility check does not constitute a final candidate freeze.
 
-```sh
-python -B -m evals.step_evidence live --output runs/d_live_new --max-calls 3 --max-rounds 3 --max-seconds 360
-```
+### Optional real generation: calls the API
 
-该开发试跑入口明确限制为 OpenRouter，读取本地忽略的 .env：LLM_API_KEY、LLM_BASE_URL=https://openrouter.ai/api/v1、自己的 LLM_MODEL。非 DeepSeek 服务的 LLM_THINKING 通常留空，JSON 输出与模型能力保持一致。成功历史模型为 google/gemini-2.5-flash，不代表老师最终模型。不要提交 .env 或密钥。
+    python -B -m evals.step_evidence live --output runs/d_live_new --max-calls 3 --max-rounds 3 --max-seconds 360
 
-调用、轮数和时间上限不等于金额上限；格式与传输重试占调用预算。不会自动重开第二次实验。当前 PR 准备与验证不增加真实模型调用。
+This bounded development entry point supports OpenRouter. It reads a locally ignored .env: LLM_API_KEY, LLM_BASE_URL=https://openrouter.ai/api/v1 and your LLM_MODEL. Leave LLM_THINKING empty for providers that do not support that option, and match JSON output settings to model capabilities. The successful historical model was google/gemini-2.5-flash; it is not a final course evaluation model. Never commit .env or keys.
 
-## 证据与结论
+Call, round and time limits are not monetary limits. Format and transport retries count toward the call budget. The tool does not automatically start another experiment. PR preparation and validation made no new real-model requests.
 
-真实生成历史和受控副本结果见 [结果说明](d_step_evidence/FLASH_RESULT.md)，精选原文件见 [证据索引](d_step_evidence/README.md)，三次运行的脱敏历史见 flash-runs-summary.json。
+## Evidence, findings and limits
 
-一次成功生成的自然记录为 6 场景、46 步、32 条观察，审计完整一致；原状态 automated_passed_manual_pending，不是完整验收。五类副本异常均被审计识别，旧门禁仍接受副本通过标记；这揭示可补强的独立核对边界，不证明正常执行器实际伪造过记录。
+See [results](d_step_evidence/FLASH_RESULT.md), the [evidence index](d_step_evidence/README.md), and flash-runs-summary.json for the sanitized history of three development runs.
 
-局限：单个简单开发题、一次成功生成；未触发自然修复循环。记录一致不认证浏览器物理事件，不防恶意执行器伪造，不证明预期规则或完整玩法正确。审计应与独立验收并列使用。C 已在组内反馈复核；该 PR 仍待 GitHub 非作者审查及 A 的集成决定，暂不修改共享生产门禁。
+The single successful generation produced six scenarios, 46 steps and 32 observations; the natural trace was complete and consistent. Its original status was automated_passed_manual_pending, not full acceptance. All five controlled copy anomalies were detected while the original gate continued accepting their pass flags. This identifies an independent consistency-check boundary, not evidence that the normal verifier actually forged or omitted actions.
+
+Limits: one simple development task and one successful generation; no natural repair loop occurred. Log consistency cannot authenticate physical browser events, defeat a malicious verifier, or establish correct expectations and complete gameplay. Use this audit alongside independent acceptance. C has provided a group review; this PR still requires non-author GitHub review and A's integration decision. Shared production gates remain unchanged.
+
+## English presentation update
+
+The current tool changes only Markdown report labels from the historical audit version to English. The original tool fingerprint remains in the historical evidence metadata; it is not the fingerprint of this presentation update. Original run files and embedded evidence bytes remain unchanged. All 23 focused tests, including three real-browser calibrations, passed after the presentation update. An initial attempt omitted the existing browser-cache path and could not locate Chromium; configuring that path resolved the three infrastructure failures without further source changes.
