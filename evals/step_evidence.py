@@ -232,18 +232,18 @@ def audit_run(run_dir, output):
                   "This does not validate game-rule expectations or complete gameplay.",
                   "Controlled evidence mutations do not count as real model failures or game samples."]}
     save(output / "AUDIT.json", report)
-    lines = ["# D 逐步执行证据审计", "", f"- 原 Agent 状态：{summary.get('status')}",
-             f"- 浏览器原始清单数：{len(records)}", f"- 原运行文件未改动：{integrity}",
-             "- 审计及证据副本实验的模型调用：0（原生成运行的用量另列于 AUDIT.json）", "",
-             "| 原清单 | 原始通过标记 | 旧门禁通过 | 步骤证据支持整体通过 | 缺证据的通过项 | 计划/源码指纹 |",
+    lines = ["# D step-by-step execution evidence audit", "", f"- Original Agent status: {summary.get('status')}",
+             f"- Original browser manifests: {len(records)}", f"- Original run files unchanged: {integrity}",
+             "- Model calls for audit and controlled copies: 0 (original generation usage is recorded separately in AUDIT.json)", "",
+             "| Original manifest | Original pass flag | Baseline gate pass | Step-supported overall pass | Unsupported passing tests | Plan/source hashes |",
              "|---|---|---|---|---|---|"]
     for r in records:
         a = r["audit"]
         lines.append(f"| {r['manifest']} | {a['original_reported_ok']} | {a['baseline_gate_passed']} | "
                      f"{a['step_supported_overall_pass']} | {a['unsupported_pass_tests']} | "
                      f"{r['plan_hash_matches']}/{r['game_hash_matches']} |")
-    lines += ["", "证据副本实验不是实际模型犯错；完整记录也不证明游戏规则正确。",
-              "若没有合适的原始通过项，副本实验明确为未执行，不修改标准以凑结果。"]
+    lines += ["", "Controlled evidence-copy mutations are not actual model failures; complete records do not prove game-rule correctness.",
+              "Without a suitable original passing test, controlled probes are explicitly not run; criteria are not changed to obtain a result."]
     (output / "REPORT.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     return report
 
