@@ -1,0 +1,311 @@
+{
+  "runs": [
+    {
+      "run_id": "d_step_pilot_20261020_01",
+      "model": "deepseek/deepseek-v3.2",
+      "limits": {
+        "max_calls": 5,
+        "max_rounds": 3,
+        "max_seconds": 360
+      },
+      "status": "run_error",
+      "planning_status": "pending",
+      "duration_seconds": 182.578,
+      "usage": {
+        "api_attempts": 2,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "cached_input_tokens": 0,
+        "calls_with_unknown_usage": 2,
+        "estimated_known_usage_cost": null,
+        "currency": "USD",
+        "cost_is_complete": false,
+        "note": "User-supplied rates only; not a billing statement. Unknown calls may be billed."
+      },
+      "successful_responses": 0,
+      "api_events": [
+        {
+          "event": "api_start",
+          "time_utc": "2026-10-20T06:15:06.407041+00:00",
+          "call": 1,
+          "stage": "plan",
+          "retry": 0
+        },
+        {
+          "event": "api_error",
+          "time_utc": "2026-10-20T06:16:36.414776+00:00",
+          "call": 1,
+          "stage": "plan",
+          "error": "API transport failure: TimeoutError"
+        },
+        {
+          "event": "api_start",
+          "time_utc": "2026-10-20T06:16:38.423312+00:00",
+          "call": 2,
+          "stage": "plan",
+          "retry": 1
+        },
+        {
+          "event": "api_error",
+          "time_utc": "2026-10-20T06:18:08.434843+00:00",
+          "call": 2,
+          "stage": "plan",
+          "error": "API transport failure: TimeoutError"
+        }
+      ],
+      "browser_manifests": 0,
+      "original_run_unchanged": true,
+      "audit_records": [],
+      "baseline_commit": "4cabc9faf01c859a0d5ee45110c1c624df94e544",
+      "agent_source_sha256": "1d8d909ed876eb25b5cc0c89864158b2eccdd929d3ecd2d6efdf11f5845ba174",
+      "experiment_source_sha256": "092a84c4db481985df8f02f2e6047a7552973a56baca3908a93c108541d22a0a"
+    },
+    {
+      "run_id": "d_step_pilot_20261020_02_flash",
+      "model": "google/gemini-2.5-flash-lite",
+      "limits": {
+        "max_calls": 5,
+        "max_rounds": 3,
+        "max_seconds": 360
+      },
+      "status": "run_error",
+      "planning_status": "pending",
+      "duration_seconds": 16.453,
+      "usage": {
+        "api_attempts": 2,
+        "prompt_tokens": 11415,
+        "completion_tokens": 7539,
+        "cached_input_tokens": 0,
+        "calls_with_unknown_usage": 0,
+        "estimated_known_usage_cost": null,
+        "currency": "USD",
+        "cost_is_complete": false,
+        "note": "User-supplied rates only; not a billing statement. Unknown calls may be billed."
+      },
+      "successful_responses": 2,
+      "api_events": [
+        {
+          "event": "api_start",
+          "time_utc": "2026-10-20T06:21:19.665703+00:00",
+          "call": 1,
+          "stage": "plan",
+          "retry": 0
+        },
+        {
+          "event": "api_ok",
+          "time_utc": "2026-10-20T06:21:27.626897+00:00",
+          "call": 1,
+          "stage": "plan",
+          "duration_seconds": 7.961
+        },
+        {
+          "event": "plan_validation_failed",
+          "time_utc": "2026-10-20T06:21:27.627545+00:00",
+          "error": "$: Missing state_contract"
+        },
+        {
+          "event": "api_start",
+          "time_utc": "2026-10-20T06:21:27.628162+00:00",
+          "call": 2,
+          "stage": "plan",
+          "retry": 0
+        },
+        {
+          "event": "api_ok",
+          "time_utc": "2026-10-20T06:21:35.510892+00:00",
+          "call": 2,
+          "stage": "plan",
+          "duration_seconds": 7.882
+        },
+        {
+          "event": "plan_validation_failed",
+          "time_utc": "2026-10-20T06:21:35.511673+00:00",
+          "error": "$: Invalid development task"
+        }
+      ],
+      "browser_manifests": 0,
+      "original_run_unchanged": true,
+      "audit_records": [],
+      "baseline_commit": "4cabc9faf01c859a0d5ee45110c1c624df94e544",
+      "agent_source_sha256": "1d8d909ed876eb25b5cc0c89864158b2eccdd929d3ecd2d6efdf11f5845ba174",
+      "experiment_source_sha256": "092a84c4db481985df8f02f2e6047a7552973a56baca3908a93c108541d22a0a"
+    },
+    {
+      "run_id": "d_step_pilot_20261020_03_flash",
+      "model": "google/gemini-2.5-flash",
+      "limits": {
+        "max_calls": 3,
+        "max_rounds": 3,
+        "max_seconds": 360
+      },
+      "status": "automated_passed_manual_pending",
+      "planning_status": "valid",
+      "duration_seconds": 27.528,
+      "usage": {
+        "api_attempts": 2,
+        "prompt_tokens": 8730,
+        "completion_tokens": 4447,
+        "cached_input_tokens": 0,
+        "calls_with_unknown_usage": 0,
+        "estimated_known_usage_cost": null,
+        "currency": "USD",
+        "cost_is_complete": false,
+        "note": "User-supplied rates only; not a billing statement. Unknown calls may be billed."
+      },
+      "successful_responses": 2,
+      "api_events": [
+        {
+          "event": "api_start",
+          "time_utc": "2026-10-20T06:22:36.636577+00:00",
+          "call": 1,
+          "stage": "plan",
+          "retry": 0
+        },
+        {
+          "event": "api_ok",
+          "time_utc": "2026-10-20T06:22:55.474018+00:00",
+          "call": 1,
+          "stage": "plan",
+          "duration_seconds": 18.837
+        },
+        {
+          "event": "api_start",
+          "time_utc": "2026-10-20T06:22:55.476124+00:00",
+          "call": 2,
+          "stage": "code_1",
+          "retry": 0
+        },
+        {
+          "event": "api_ok",
+          "time_utc": "2026-10-20T06:23:00.136704+00:00",
+          "call": 2,
+          "stage": "code_1",
+          "duration_seconds": 4.66
+        }
+      ],
+      "browser_manifests": 1,
+      "original_run_unchanged": true,
+      "audit_records": [
+        {
+          "manifest": "traces/attempts/01/evidence/replay.json",
+          "manifest_sha256": "b89b7fea5a82514308a789218732bd4de9cfa5305cfda2d436bd3e10afadaf04",
+          "plan_hash_matches": true,
+          "game_hash_matches": true,
+          "audit": {
+            "original_reported_ok": true,
+            "baseline_gate_passed": true,
+            "step_supported_overall_pass": true,
+            "planned_tests": 6,
+            "claimed_pass_tests": 6,
+            "supported_pass_tests": 6,
+            "unsupported_pass_tests": 0,
+            "malformed_test_records": false,
+            "unknown_test_ids": [],
+            "tests": [
+              {
+                "id": "T1",
+                "verdict": "supported_pass",
+                "planned_steps": 7,
+                "recorded_steps": 7,
+                "planned_observations": 7,
+                "recorded_observations": 7,
+                "issues": []
+              },
+              {
+                "id": "T2",
+                "verdict": "supported_pass",
+                "planned_steps": 5,
+                "recorded_steps": 5,
+                "planned_observations": 4,
+                "recorded_observations": 4,
+                "issues": []
+              },
+              {
+                "id": "T3",
+                "verdict": "supported_pass",
+                "planned_steps": 7,
+                "recorded_steps": 7,
+                "planned_observations": 4,
+                "recorded_observations": 4,
+                "issues": []
+              },
+              {
+                "id": "T4",
+                "verdict": "supported_pass",
+                "planned_steps": 9,
+                "recorded_steps": 9,
+                "planned_observations": 5,
+                "recorded_observations": 5,
+                "issues": []
+              },
+              {
+                "id": "T5",
+                "verdict": "supported_pass",
+                "planned_steps": 12,
+                "recorded_steps": 12,
+                "planned_observations": 7,
+                "recorded_observations": 7,
+                "issues": []
+              },
+              {
+                "id": "T6",
+                "verdict": "supported_pass",
+                "planned_steps": 6,
+                "recorded_steps": 6,
+                "planned_observations": 5,
+                "recorded_observations": 5,
+                "issues": []
+              }
+            ],
+            "note": "Record consistency only; complete logs do not prove actual browser events, correct expectations or full gameplay."
+          },
+          "mutation_status": "completed",
+          "controlled_probes": [
+            {
+              "name": "delete_input",
+              "controlled_record_copy": true,
+              "target_test": "T2",
+              "baseline_gate_passed": true,
+              "detected": true
+            },
+            {
+              "name": "delete_observation",
+              "controlled_record_copy": true,
+              "target_test": "T2",
+              "baseline_gate_passed": true,
+              "detected": true
+            },
+            {
+              "name": "failed_input_marked_pass",
+              "controlled_record_copy": true,
+              "target_test": "T2",
+              "baseline_gate_passed": true,
+              "detected": true
+            },
+            {
+              "name": "duplicate_action",
+              "controlled_record_copy": true,
+              "target_test": "T2",
+              "baseline_gate_passed": true,
+              "detected": true
+            },
+            {
+              "name": "changed_arguments",
+              "controlled_record_copy": true,
+              "target_test": "T2",
+              "baseline_gate_passed": true,
+              "detected": true
+            }
+          ]
+        }
+      ],
+      "baseline_commit": "4cabc9faf01c859a0d5ee45110c1c624df94e544",
+      "agent_source_sha256": "1d8d909ed876eb25b5cc0c89864158b2eccdd929d3ecd2d6efdf11f5845ba174",
+      "experiment_source_sha256": "092a84c4db481985df8f02f2e6047a7552973a56baca3908a93c108541d22a0a"
+    }
+  ],
+  "total_attempts_all_history": 6,
+  "unknown_usage_attempts": 2,
+  "latest_turn_attempts": 4,
+  "raw_live_requests_and_responses_shared": false
+}

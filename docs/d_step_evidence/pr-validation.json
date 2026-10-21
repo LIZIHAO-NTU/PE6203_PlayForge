@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-21",
+  "baseline_commit": "4cabc9faf01c859a0d5ee45110c1c624df94e544",
+  "production_agent_changed": false,
+  "new_real_model_api_calls": 0,
+  "focused_with_browser": {
+    "discovered": 23,
+    "passed": 23,
+    "skipped": 0
+  },
+  "default_regression": {
+    "discovered": 327,
+    "passed": 278,
+    "skipped_real_browser": 49,
+    "failed": 0,
+    "errors": 0
+  },
+  "initial_sandbox_attempt": {
+    "errors": 3,
+    "cause": "Existing localhost server tests could not bind a local port; rerun with localhost permitted passed without source changes."
+  },
+  "published_reaudit": {
+    "audit_model_api_calls": 0,
+    "browser_manifests_audited": 1,
+    "original_run_unchanged": true,
+    "records": [
+      {
+        "plan_hash_matches": true,
+        "game_hash_matches": true,
+        "supported_pass_tests": 6,
+        "unsupported_pass_tests": 0,
+        "controlled_probes_detected": 5
+      }
+    ]
+  },
+  "note": "Framework logs may contain API counts from fake-client tests; they are not paid model requests. Historical real-model usage is reported separately.",
+  "latest_main_compatibility": {
+    "main_commit": "c414c91176876d0030ce295ccabf4b4fa4a90e1b",
+    "default_regression": {
+      "discovered": 334,
+      "passed": 284,
+      "skipped": 50,
+      "errors": 0
+    },
+    "focused_with_browser": {
+      "discovered": 23,
+      "passed": 23,
+      "skipped": 0
+    },
+    "isolated_combination_only": true
+  },
+  "english_presentation_update": {
+    "changed": "Markdown report labels and documentation only; original embedded evidence bytes retained",
+    "focused_with_browser": {
+      "discovered": 23,
+      "passed": 23,
+      "skipped": 0
+    },
+    "initial_attempt": "Three browser calibrations could not find Chromium because PLAYWRIGHT_BROWSERS_PATH was omitted; rerun with the existing browser cache passed.",
+    "new_real_model_api_calls": 0,
+    "current_tool_sha256": "c86038386e531dfc139cdb809d16f4f2487b6f7a5ae6dbeebeb6db884440ef28"
+  }
+}
