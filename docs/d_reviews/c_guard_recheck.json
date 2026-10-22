@@ -1,0 +1,68 @@
+{
+  "date": "2026-10-21",
+  "code_commit": "c414c91176876d0030ce295ccabf4b4fa4a90e1b",
+  "model_api_calls": 0,
+  "new_browser_runs": 0,
+  "preserved_real_browser_traces_rechecked": 2,
+  "cases": [
+    {
+      "case": "adjacent_second_assertion_fails",
+      "plan_sha256": "6146c0096d2b9a2bf3a03543200070598420ddc55008ba1c6f17cd33cf626edd",
+      "original_browser_result_sha256": "b8a387c3bd38c16b9c5000fbb8b0d27e59396a29ea35de2967d414cb758a1cf8",
+      "new_route": {
+        "action": "stop_test_review",
+        "failure_kinds": [
+          "assertion_mismatch"
+        ],
+        "instruction": "Adjacent frozen state and display assertions disagree on a named value. Preserve the game and frozen tests for plan review; neither assertion alone proves the game is correct.",
+        "display_conflicts": [
+          {
+            "test_id": "T1",
+            "state_step": 3,
+            "display_step": 4,
+            "state_expected": 3,
+            "display_expected": "2"
+          }
+        ],
+        "state_conflicts": [],
+        "cross_test_conflicts": []
+      },
+      "original_files_unchanged": true
+    },
+    {
+      "case": "cross_test_exact_text_numeric_normalization",
+      "plan_sha256": "c5516ab4b430f27ab7f205962153e8d7b9eff7adeecaf6d3c8a4f57faa758ba6",
+      "original_browser_result_sha256": "15a13c7b7c613d42a7b3b7f23c443e9dacbdbf5f4bded0c50918f7ae1412f5c8",
+      "new_route": {
+        "action": "stop_test_review",
+        "failure_kinds": [
+          "assertion_mismatch"
+        ],
+        "instruction": "Frozen tests expect different values after identical fresh-page action sequences. Preserve the game and tests for rule review; neither expectation alone proves a code or test defect.",
+        "display_conflicts": [],
+        "state_conflicts": [],
+        "cross_test_conflicts": [
+          {
+            "test_ids": [
+              "T3",
+              "T1"
+            ],
+            "steps": [
+              2,
+              2
+            ],
+            "source": "text",
+            "path_or_selector": "#energy",
+            "action_count": 1,
+            "expected_values": [
+              "3.0",
+              "3"
+            ]
+          }
+        ]
+      },
+      "original_files_unchanged": true
+    }
+  ],
+  "scope": "Saved controlled D traces re-evaluated by merged code; no formal S3 execution or full-browser regression."
+}
