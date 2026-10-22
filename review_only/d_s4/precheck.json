@@ -1,0 +1,332 @@
+{
+  "status": "draft_schema_and_expected_value_precheck_passed_not_game_acceptance",
+  "date": "2026-10-20",
+  "author": "D",
+  "independent_reviewer": "E_pending",
+  "baseline_used_for_schema_validation": "4cabc9faf01c859a0d5ee45110c1c624df94e544",
+  "formal_candidate_commit": null,
+  "spec_sha256": "8dfafb3b4238bfca8ad6bcc9b159e05ab9254dc5c60bdd90ce84b4312bbc9607",
+  "acceptance_sha256": "21e4afc3527a7fff5a63197863b5bf27e4164c78af857ef36384d244c1c2b6ee",
+  "automated_scenarios": 10,
+  "manual_checks": 2,
+  "literal_expectations_arithmetic_checked": 84,
+  "max_steps_per_scenario": 18,
+  "spec_quotes_present": true,
+  "api_calls": 0,
+  "browser_executions": 0,
+  "game_generated": false,
+  "independent_game_acceptance_executed": false,
+  "note": "Schema and hand-authored rule arithmetic checks do not prove a game works, E approval, candidate freeze or held-out eligibility.",
+  "expected_sequence_derivations": [
+    {
+      "test": "T1",
+      "normal_button_sequence": [
+        {
+          "button": "restart",
+          "expected_values": {
+            "water": 2,
+            "moves": 4,
+            "delivered": 0,
+            "phase": "Playing"
+          }
+        }
+      ]
+    },
+    {
+      "test": "T2",
+      "normal_button_sequence": [
+        {
+          "button": "pump",
+          "expected_values": {
+            "water": 5,
+            "moves": 3,
+            "delivered": 0,
+            "phase": "Playing"
+          }
+        },
+        {
+          "button": "pump",
+          "expected_values": {
+            "water": 5,
+            "moves": 2,
+            "delivered": 0,
+            "phase": "Playing"
+          }
+        },
+        {
+          "button": "pump",
+          "expected_values": {
+            "water": 5,
+            "moves": 1,
+            "delivered": 0,
+            "phase": "Playing"
+          }
+        }
+      ]
+    },
+    {
+      "test": "T3",
+      "normal_button_sequence": []
+    },
+    {
+      "test": "T4",
+      "normal_button_sequence": [
+        {
+          "button": "pump",
+          "expected_values": {
+            "water": 5,
+            "moves": 3,
+            "delivered": 0,
+            "phase": "Playing"
+          }
+        },
+        {
+          "button": "deliver",
+          "expected_values": {
+            "water": 1,
+            "moves": 2,
+            "delivered": 1,
+            "phase": "Playing"
+          }
+        }
+      ]
+    },
+    {
+      "test": "T5",
+      "normal_button_sequence": [
+        {
+          "button": "pump",
+          "expected_values": {
+            "water": 5,
+            "moves": 3,
+            "delivered": 0,
+            "phase": "Playing"
+          }
+        },
+        {
+          "button": "deliver",
+          "expected_values": {
+            "water": 1,
+            "moves": 2,
+            "delivered": 1,
+            "phase": "Playing"
+          }
+        },
+        {
+          "button": "pump",
+          "expected_values": {
+            "water": 4,
+            "moves": 1,
+            "delivered": 1,
+            "phase": "Playing"
+          }
+        },
+        {
+          "button": "deliver",
+          "expected_values": {
+            "water": 0,
+            "moves": 0,
+            "delivered": 2,
+            "phase": "Won"
+          }
+        }
+      ]
+    },
+    {
+      "test": "T6",
+      "normal_button_sequence": [
+        {
+          "button": "pump",
+          "expected_values": {
+            "water": 5,
+            "moves": 3,
+            "delivered": 0,
+            "phase": "Playing"
+          }
+        },
+        {
+          "button": "pump",
+          "expected_values": {
+            "water": 5,
+            "moves": 2,
+            "delivered": 0,
+            "phase": "Playing"
+          }
+        },
+        {
+          "button": "pump",
+          "expected_values": {
+            "water": 5,
+            "moves": 1,
+            "delivered": 0,
+            "phase": "Playing"
+          }
+        },
+        {
+          "button": "pump",
+          "expected_values": {
+            "water": 5,
+            "moves": 0,
+            "delivered": 0,
+            "phase": "Lost"
+          }
+        }
+      ]
+    },
+    {
+      "test": "T7",
+      "normal_button_sequence": [
+        {
+          "button": "pump",
+          "expected_values": {
+            "water": 5,
+            "moves": 3,
+            "delivered": 0,
+            "phase": "Playing"
+          }
+        },
+        {
+          "button": "deliver",
+          "expected_values": {
+            "water": 1,
+            "moves": 2,
+            "delivered": 1,
+            "phase": "Playing"
+          }
+        },
+        {
+          "button": "restart",
+          "expected_values": {
+            "water": 2,
+            "moves": 4,
+            "delivered": 0,
+            "phase": "Playing"
+          }
+        }
+      ]
+    },
+    {
+      "test": "T8",
+      "normal_button_sequence": [
+        {
+          "button": "pump",
+          "expected_values": {
+            "water": 5,
+            "moves": 3,
+            "delivered": 0,
+            "phase": "Playing"
+          }
+        },
+        {
+          "button": "deliver",
+          "expected_values": {
+            "water": 1,
+            "moves": 2,
+            "delivered": 1,
+            "phase": "Playing"
+          }
+        },
+        {
+          "button": "pump",
+          "expected_values": {
+            "water": 4,
+            "moves": 1,
+            "delivered": 1,
+            "phase": "Playing"
+          }
+        },
+        {
+          "button": "deliver",
+          "expected_values": {
+            "water": 0,
+            "moves": 0,
+            "delivered": 2,
+            "phase": "Won"
+          }
+        },
+        {
+          "button": "restart",
+          "expected_values": {
+            "water": 2,
+            "moves": 4,
+            "delivered": 0,
+            "phase": "Playing"
+          }
+        }
+      ]
+    },
+    {
+      "test": "T9",
+      "normal_button_sequence": [
+        {
+          "button": "pump",
+          "expected_values": {
+            "water": 5,
+            "moves": 3,
+            "delivered": 0,
+            "phase": "Playing"
+          }
+        },
+        {
+          "button": "pump",
+          "expected_values": {
+            "water": 5,
+            "moves": 2,
+            "delivered": 0,
+            "phase": "Playing"
+          }
+        },
+        {
+          "button": "pump",
+          "expected_values": {
+            "water": 5,
+            "moves": 1,
+            "delivered": 0,
+            "phase": "Playing"
+          }
+        },
+        {
+          "button": "pump",
+          "expected_values": {
+            "water": 5,
+            "moves": 0,
+            "delivered": 0,
+            "phase": "Lost"
+          }
+        },
+        {
+          "button": "restart",
+          "expected_values": {
+            "water": 2,
+            "moves": 4,
+            "delivered": 0,
+            "phase": "Playing"
+          }
+        }
+      ]
+    },
+    {
+      "test": "T10",
+      "normal_button_sequence": [
+        {
+          "button": "restart",
+          "expected_values": {
+            "water": 2,
+            "moves": 4,
+            "delivered": 0,
+            "phase": "Playing"
+          }
+        },
+        {
+          "button": "pump",
+          "expected_values": {
+            "water": 5,
+            "moves": 3,
+            "delivered": 0,
+            "phase": "Playing"
+          }
+        }
+      ]
+    }
+  ]
+}
