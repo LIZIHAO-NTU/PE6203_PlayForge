@@ -1,143 +1,89 @@
-# E handoff: S4 review replacement and S5 draft
+# E handoff: S4 review and revised S5 draft
 
-## Status and authorship boundary
+## S4: D-authored Tank Rescue
 
-The team table assigns S4 authorship to D and independent review/execution to
-E. D's evidence-audit branch explicitly excludes formal S1-S5 materials, and
-no S4 requirement or acceptance files were available. At the user's request,
-E reconstructed a complete S4 draft so work can continue.
+D restored the original Tank Rescue specification and evaluation-only plan in
+PR #7 (`d-s4-handoff`). I reviewed D's files, not E's separate Reservoir Relay
+substitute. The static review passes; the game and all acceptance checks remain
+unexecuted. The full decision and independent rule trace are in
+[E_S4_REVIEW.md](E_S4_REVIEW.md).
 
-This reconstructed S4 **must not be described as independently reviewed by E**:
-E participated in authoring it. Before formal use, D should either adopt and
-confirm the exact S4 text or replace it, and another member should check the
-final expectations. E can still execute the frozen S4 as assigned. This keeps
-the contribution record accurate.
-
-S5 is E's assigned primary specification. A must independently review and
-execute S5. Neither acceptance file may be included in model messages.
-
-## Delivered files
-
-- `examples/team_evaluation_20261022/s4_reservoir_relay.md`
-- `examples/team_evaluation_20261022/s4_reservoir_relay.acceptance.json`
-- `examples/team_evaluation_20261022/s5_pulse_target.md`
-- `examples/team_evaluation_20261022/s5_pulse_target.acceptance.json`
-- `examples/team_evaluation_20261022/suite.json`
-
-## S4 rule trace
-
-- Initial: water 6, tanks 0, Playing.
-- Pump: `min(10, water + 3)`.
-- Legal Fill: `water - 4`, `tanks + 1`.
-- Insufficient Fill: no state change.
-- Win path: `6/0 -> Fill -> 2/1 -> Pump -> 5/1 -> Fill -> 1/2 Won`.
-- Won locks Pump and Fill; Restart returns `6/0 Playing`.
-
-The seven automated scenarios cover initial state, ordinary Pump, the cap,
-legal Fill, insufficient Fill, win/terminal lock and restart. One separate
-manual check covers visible rules and layout.
-
-## S5 rule trace
-
-- Initial: playerX 30, score 0, Playing.
-- Arrow keys move at 120 pixels/second; center is clamped to 10 through 350.
-- Space at initial x=30 is a no-op.
-- The target zone is 170 through 190. Goal-based ArrowRight movement to at
-  least 175 stays within the target under the 25 ms polling interval, then
-  Space produces score 1 and Won.
-- Won locks movement and Space. A short stability observation checks that the
-  position does not continue drifting.
-- Restart returns `30/0 Playing`.
-
-The seven automated scenarios cover initial state, continuous movement, both
-boundaries, a missed lock, reachable win, terminal stability and restart. One
-separate manual check covers canvas visibility and responsive layout.
-
-## Freeze and execution checklist
-
-1. D confirms/adopts S4; a non-author validates the final S4 expectations.
-2. A independently reviews S5 and records issues or approval.
-3. Resolve review comments before freezing; do not edit expected values after
-   seeing generated behavior.
-4. Record candidate commit SHA, both file hashes, model/provider/JSON settings,
-   all feature flags and limits (`5` calls, `3` rounds, `360` seconds unless
-   the group approves different values).
-5. Confirm the specifications were not used to tune this candidate and the
-   acceptance JSON files are absent from generation/planning/repair messages.
-6. Run into a new output directory. Preserve startup, plan, self-check,
-   independent-check, manual-check, call/token/time and failure evidence.
-7. Report missing output, skipped checks and infrastructure failures in the
-   denominator. Do not overwrite or silently rerun the original result.
-
-No model API or formal candidate evaluation was run while preparing these
-drafts.
-
-## Draft fingerprints
-
-Branch: `e/s4-s5-evaluation-specs`
-
-Branch point: `8eb3145` (`origin/main`, including merged PR #5 at draft time)
+Reviewed D branch tip: `a3ed28a1df0e8eb0a8a457d8c2194f85ff64c772`.
 
 ```text
-s4_reservoir_relay.md
-886ebe763884a1d0a063f1c505f37b6e31556123859c5e21cb2eb5633d498e4d
+tank_rescue.md
+8dfafb3b4238bfca8ad6bcc9b159e05ab9254dc5c60bdd90ce84b4312bbc9607
 
-s4_reservoir_relay.acceptance.json
-84ae0ffa4170752887b2f1fe05e5a7e1b1f2490db882f6738bde57bf420f50d2
-
-s5_pulse_target.md
-f94b79242588b8cf0c8ebfca5af538bc3bbf74337ea771a6f6fd16ffb482b548
-
-s5_pulse_target.acceptance.json
-944b723f5da5674168218ac3ae1833244043e8c07f7b04045a0104fcfc45ead2
-
-suite.json
-b859b0f70538851125c573f15158fb3c492afd0b9b64c099c9a42e2144c12bd1
+tank_rescue.acceptance.json
+21e4afc3527a7fff5a63197863b5bf27e4164c78af857ef36384d244c1c2b6ee
 ```
 
-These identify the drafts supplied for review, not a group-approved formal
-freeze. Any review edit requires recomputing the affected hash before use.
+## S5: revised after A's first review
 
-## Offline validation
+The nine automated checks cover initial state, approximate speed, both
+boundaries, Space no-op outside the target, reachable win, terminal lock and
+stability, Restart from Won, simultaneous opposite directions, and Restart
+during Playing. The manual check compares visible player movement and target
+placement with `playerX` snapshots, including start, intermediate positions,
+boundaries and target; it also records a supplementary timed speed check.
 
-- `agent.benchmark.load_suite` loaded both cases and reproduced the recorded
-  requirement and acceptance hashes.
-- Both plans passed `agent.contracts.validate_plan` with no `plan_warnings`.
-- `review_plan` found functional evidence and the required invalid-action,
-  terminal, reset and DOM/state consistency categories. Its only advisory for
-  each plan is that `T1` observes initial state without input; later tests
-  provide the functional evidence.
-- `python -m unittest tests.test_mvp.ContractTests -v`: 8 passed.
-- `PYTHONPATH=.. python -m unittest test_quality -v` from `tests/`: 26 passed,
-  including 4 opt-in browser tests skipped by default.
-- A broader first attempt also encountered the environment's loopback-bind
-  restriction in `ServerTests`; this is unrelated to these data-only files and
-  is not reported as a passing browser run.
+The target zone is now x=150..210. Goal movement targets x>=180, centered in
+the zone, with 30 canvas pixels of margin on either side. T5 asserts both zone
+bounds before Space. This tolerates ordinary polling/frame overshoot but makes
+no hard real-time guarantee under arbitrary browser stalls; any overshoot
+outside the asserted zone fails instead of being counted as a win.
 
-## Direct handoff to D and A
+T2 checks a 500 ms hold against a broad displacement interval of 40..80 pixels
+(playerX 70..110 from the initial 30), equivalent to a coarse 80..160 px/s
+band around the nominal 120 px/s. This is a regression bound, not precision
+timing evidence. Manual timing remains supplementary and must record method and
+observed displacement/state.
 
-**To D:** The original S4 files were not present in your evidence-audit branch,
-which explicitly excludes formal S1-S5 acceptance materials. I therefore
-prepared `s4_reservoir_relay.md` and its frozen acceptance JSON as a
-replacement draft. S4 follows your assigned resource-cap/terminal mechanism:
-water 6, pump cap 10, fill cost 4, two tanks to Won, insufficient Fill no-op,
-terminal lock and Restart. Please review the English rule wording and either
-adopt these exact bytes as the S4 draft or replace them. Because I authored
-this replacement, it is not an independent E review; a non-author must check
-the final S4 expectations before freeze. E can execute the frozen S4 after
-that review.
+## Files and hashes
 
-**To A:** S5 is E's primary specification, `s5_pulse_target.md`, with its
-independent acceptance plan. It covers initial state, continuous movement,
-both boundary clamps, Space no-op outside the target, reachable target win,
-post-Won stability/ignored input, and Restart. Please independently review the
-rule trace, especially the goal-based movement into x=175..190 and the
-short-window stability assertion, then execute the frozen S5. Do not send the
-acceptance JSON to the generation or repair agent.
+- D's reviewed S4 record: `docs/E_S4_REVIEW.md`
+- A's independent PR #6 review: `docs/E_PR6_REVIEW.md`
+- E-authored separate S4 substitute, retained but not mixed into D's S4:
+  `examples/team_evaluation_20261022/s4_reservoir_relay.md` and its acceptance
+- E-authored S5: `examples/team_evaluation_20261022/s5_pulse_target.md` and its
+  acceptance JSON
+- Draft suite: `examples/team_evaluation_20261022/suite.json`
 
-**Shared:** The branch is pushed as
-`origin/e/s4-s5-evaluation-specs` at commit `fe0e581`. The acceptance and
-specification hashes are listed above. Before either formal run, confirm the
-candidate SHA, model/provider/settings, budgets, feature flags and input-data
-separation. Preserve original failures and report missing or skipped checks in
-the denominator.
+S5 review-draft hashes after A's requested changes:
+
+```text
+s5_pulse_target.md
+3907aaa11f0ec23419cdf8b193256739111f9aba9b1b7ac2ea96e72b6a059a96
+
+s5_pulse_target.acceptance.json
+765356bb9c6f27397b318a5ece67a45e3918b17eee51f12ccba2d225ef9a5335
+
+suite.json
+8faac7e8606f224d4e5b5a70431699c04f2ae82b814c2599af9d6c009f9f283d
+```
+
+These hashes identify review drafts, not a group-approved formal freeze.
+
+## Validation and next actions
+
+1. E's independent S4 review is static only. After all group freeze conditions
+   are met, E executes D's S4 acceptance plan from the review-only location;
+   never copy it into the model-accessible generation workspace.
+2. A reviews the revised S5 file hashes and strategy, then owns S5's formal
+   execution after the same freeze confirmation.
+3. No acceptance JSON, expected results, review-only directory or complete
+   repository may enter generation/planning/repair messages. Inspect actual
+   paths and messages and record any exposure.
+4. Freeze candidate SHA, specification and acceptance hashes, case eligibility,
+   model/provider/settings, switches and call/round/time budgets before formal
+   runs. Preserve missing results, failures and reruns distinctly.
+5. E's assigned delivery/reproduction main task and PR #6 independent review
+   are separate work items. PR #6 review is complete with no blocking findings;
+   focused browser tests passed 9/9 and the default full run passed 343 tests
+   with 51 opt-in browser tests skipped. E's delivery/reproduction work is on
+   separate branch `e/delivery-reproduction`, commit `426710f`; the README
+   export-command correction and clean-environment evidence are there. These
+   S4/S5 materials do not substitute for that main task.
+
+No model API, generated game or formal S4/S5 acceptance execution was used to
+prepare this update.

@@ -14,7 +14,7 @@
   },
   "development_plan": [
     "Run every automated test from its own fresh page.",
-    "Use goal-based movement checks instead of relying on one exact key-hold duration.",
+    "Use a broad timing tolerance for the approximate speed check and a wide target zone for goal-based movement.",
     "Keep this acceptance plan outside all generation, planning and repair messages.",
     "Preserve the frozen plan and original failures without changing expected values after generation."
   ],
@@ -25,13 +25,15 @@
   },
   "requirements": [
     {"id": "R1", "text": "The initial player position, score and phase are correct.", "verification": "automated", "priority": "core"},
-    {"id": "R2", "text": "Arrow keys produce continuous horizontal movement.", "verification": "automated", "priority": "core"},
+    {"id": "R2", "text": "Arrow keys produce continuous horizontal movement at approximately 120 pixels per second.", "verification": "automated", "priority": "core"},
     {"id": "R3", "text": "Movement is clamped at both canvas boundaries.", "verification": "automated", "priority": "core"},
     {"id": "R4", "text": "Space outside the target zone is a no-op.", "verification": "automated", "priority": "core"},
     {"id": "R5", "text": "The target is reachable and a successful lock wins.", "verification": "automated", "priority": "core"},
     {"id": "R6", "text": "Movement and Space are ignored and state remains stable after Won.", "verification": "automated", "priority": "core"},
     {"id": "R7", "text": "Restart from Won restores the exact initial state.", "verification": "automated", "priority": "core"},
-    {"id": "R8", "text": "The player, target, instructions and status are clearly visible.", "verification": "manual", "priority": "visual"}
+    {"id": "R8", "text": "The player, target, instructions and status are clearly visible and correspond to actual observed state.", "verification": "manual", "priority": "visual"},
+    {"id": "R9", "text": "Simultaneous ArrowLeft and ArrowRight input produces no movement.", "verification": "automated", "priority": "core"},
+    {"id": "R10", "text": "Restart during Playing restores the exact initial state.", "verification": "automated", "priority": "core"}
   ],
   "tests": [
     {
@@ -58,12 +60,12 @@
       "requirement_ids": ["R2"],
       "evidence": {
         "spec_quote": "The player marker ... may move while ArrowLeft or ArrowRight is held.",
-        "expected_basis": "Holding ArrowRight from playerX 30 must produce a greater position while remaining in Playing."
+        "expected_basis": "At 120 pixels/second, a 500 ms hold ideally moves 60 pixels. The deliberately broad 40..80 pixel displacement window allows frame and scheduling jitter while detecting grossly incorrect speed; it is an approximate check, not precision timing evidence."
       },
       "steps": [
-        {"action": "key", "key": "ArrowRight", "hold_ms": 300},
-        {"action": "assert", "source": "state", "path": "playerX", "op": "gt", "value": 30},
-        {"action": "assert", "source": "state", "path": "playerX", "op": "lt", "value": 170},
+        {"action": "key", "key": "ArrowRight", "hold_ms": 500},
+        {"action": "assert", "source": "state", "path": "playerX", "op": "ge", "value": 70},
+        {"action": "assert", "source": "state", "path": "playerX", "op": "le", "value": 110},
         {"action": "assert", "source": "state", "path": "phase", "op": "eq", "value": "Playing"}
       ]
     },
@@ -80,7 +82,7 @@
         {"action": "key_until", "key": "ArrowLeft", "until": {"source": "state", "path": "playerX", "op": "eq", "value": 10}, "timeout_ms": 1000},
         {"action": "key", "key": "ArrowLeft", "hold_ms": 250},
         {"action": "assert", "source": "state", "path": "playerX", "op": "eq", "value": 10},
-        {"action": "key_until", "key": "ArrowRight", "until": {"source": "state", "path": "playerX", "op": "eq", "value": 350}, "timeout_ms": 4000},
+        {"action": "key_until", "key": "ArrowRight", "until": {"source": "state", "path": "playerX", "op": "ge", "value": 350}, "timeout_ms": 4000},
         {"action": "key", "key": "ArrowRight", "hold_ms": 250},
         {"action": "assert", "source": "state", "path": "playerX", "op": "eq", "value": 350}
       ]
@@ -108,11 +110,12 @@
       "requirement_ids": ["R5"],
       "evidence": {
         "spec_quote": "Pressing Space wins only when the player's center is inside that inclusive target zone ... score to 1 and phase to Won.",
-        "expected_basis": "ArrowRight can reach playerX at least 175, which is inside 170 through 190; Space then produces score 1 and Won."
+        "expected_basis": "The test targets x=180, the center of the 150..210 zone, leaving 30 canvas pixels on either side. At approximately 120 pixels/second and 25 ms polling, this margin accommodates ordinary frame/poll overshoot; explicit lower and upper assertions reject out-of-zone stops instead of assuming polling guarantees a position. The 2.5 second goal budget is twice the nominal 1.25 seconds needed from x=30."
       },
       "steps": [
-        {"action": "key_until", "key": "ArrowRight", "until": {"source": "state", "path": "playerX", "op": "ge", "value": 175}, "timeout_ms": 3000, "poll_ms": 25},
-        {"action": "assert", "source": "state", "path": "playerX", "op": "le", "value": 190},
+        {"action": "key_until", "key": "ArrowRight", "until": {"source": "state", "path": "playerX", "op": "ge", "value": 180}, "timeout_ms": 2500, "poll_ms": 25},
+        {"action": "assert", "source": "state", "path": "playerX", "op": "ge", "value": 150},
+        {"action": "assert", "source": "state", "path": "playerX", "op": "le", "value": 210},
         {"action": "key", "key": "Space"},
         {"action": "assert", "source": "state", "path": "score", "op": "eq", "value": 1},
         {"action": "assert", "source": "state", "path": "phase", "op": "eq", "value": "Won"},
@@ -130,7 +133,8 @@
         "expected_basis": "After a successful lock, further ArrowRight and Space input leave playerX unchanged, score 1 and Won; sampling confirms short-window stability."
       },
       "setup_steps": [
-        {"action": "key_until", "key": "ArrowRight", "until": {"source": "state", "path": "playerX", "op": "ge", "value": 175}, "timeout_ms": 3000, "poll_ms": 25},
+        {"action": "key_until", "key": "ArrowRight", "until": {"source": "state", "path": "playerX", "op": "ge", "value": 180}, "timeout_ms": 2500, "poll_ms": 25},
+        {"action": "assert", "source": "state", "path": "playerX", "op": "le", "value": 210},
         {"action": "key", "key": "Space"},
         {"action": "assert", "source": "state", "path": "phase", "op": "eq", "value": "Won"},
         {"action": "capture", "name": "won_state"}
@@ -154,11 +158,48 @@
         "expected_basis": "After a reachable win, clicking Restart returns all state fields and visible score/phase to their initial values."
       },
       "setup_steps": [
-        {"action": "key_until", "key": "ArrowRight", "until": {"source": "state", "path": "playerX", "op": "ge", "value": 175}, "timeout_ms": 3000, "poll_ms": 25},
+        {"action": "key_until", "key": "ArrowRight", "until": {"source": "state", "path": "playerX", "op": "ge", "value": 180}, "timeout_ms": 2500, "poll_ms": 25},
+        {"action": "assert", "source": "state", "path": "playerX", "op": "le", "value": 210},
         {"action": "key", "key": "Space"},
         {"action": "assert", "source": "state", "path": "phase", "op": "eq", "value": "Won"}
       ],
       "steps": [
+        {"action": "click", "selector": "#restart"},
+        {"action": "assert", "source": "state", "path": "playerX", "op": "eq", "value": 30},
+        {"action": "assert", "source": "state", "path": "score", "op": "eq", "value": 0},
+        {"action": "assert", "source": "state", "path": "phase", "op": "eq", "value": "Playing"},
+        {"action": "assert_consistent", "state_path": "score", "source": "text", "selector": "#score", "coerce": "number"},
+        {"action": "assert_consistent", "state_path": "phase", "source": "text", "selector": "#phase"}
+      ]
+    },
+    {
+      "id": "T8",
+      "description": "Simultaneous opposite directions cancel",
+      "purpose": "legal_action",
+      "requirement_ids": ["R9"],
+      "evidence": {
+        "spec_quote": "Simultaneous opposite directions produce no movement.",
+        "expected_basis": "Both keys are held together for 500 ms from x=30; their opposing movement cancels, leaving x=30 and phase Playing."
+      },
+      "steps": [
+        {"action": "keys", "keys": ["ArrowLeft", "ArrowRight"], "hold_ms": 500},
+        {"action": "assert", "source": "state", "path": "playerX", "op": "eq", "value": 30},
+        {"action": "assert", "source": "state", "path": "phase", "op": "eq", "value": "Playing"}
+      ]
+    },
+    {
+      "id": "T9",
+      "description": "Restart during Playing restores the initial state",
+      "purpose": "reset",
+      "requirement_ids": ["R10"],
+      "evidence": {
+        "spec_quote": "A visible native button #restart always restores exactly playerX=30, score=0 and phase Playing without reloading the page.",
+        "expected_basis": "After ArrowRight moves from x=30, Restart during Playing immediately restores x=30, score=0 and Playing."
+      },
+      "steps": [
+        {"action": "key_until", "key": "ArrowRight", "until": {"source": "state", "path": "playerX", "op": "ge", "value": 40}, "timeout_ms": 1000, "poll_ms": 25},
+        {"action": "assert", "source": "state", "path": "playerX", "op": "gt", "value": 30},
+        {"action": "assert", "source": "state", "path": "phase", "op": "eq", "value": "Playing"},
         {"action": "click", "selector": "#restart"},
         {"action": "assert", "source": "state", "path": "playerX", "op": "eq", "value": 30},
         {"action": "assert", "source": "state", "path": "score", "op": "eq", "value": 0},
@@ -171,7 +212,7 @@
   "manual_checks": [
     {
       "requirement_id": "R8",
-      "instruction": "On desktop and a narrow viewport, confirm the 360 by 220 canvas, player and target are visibly distinct; instructions, score, phase and Restart remain readable without overlap."
+      "instruction": "On desktop and a narrow viewport, confirm the player marker visibly moves left and right, reaches both clamped boundaries and the target zone, and visually occupies positions corresponding to read-only playerX snapshots at the start, an intermediate position, each boundary and the target. Confirm the target-zone drawing spans the rule-defined x=150..210 coordinates; after Space in the target, the visible Won/score display agrees with the snapshot. Also check instructions, score, phase and Restart remain readable without overlap. For approximate speed, time a 500 ms held movement and compare visible displacement with the reported playerX change; record timing method and observed values. This manual timing is supplementary and does not replace T2 or certify exact 120 px/s precision."
     }
   ]
 }
