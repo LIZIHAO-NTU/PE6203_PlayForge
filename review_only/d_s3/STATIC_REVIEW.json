@@ -1,0 +1,771 @@
+{
+  "review_kind": "static_independent_expectation_review_not_game_execution",
+  "date": "2026-10-21",
+  "model_api_calls": 0,
+  "browser_runs": 0,
+  "game_generated": false,
+  "spec_original_sha256": "654d8e384b800d5ebd09b3905bd9d73a722c9e320a692194e23152bca2b43bf8",
+  "spec_pr4_sha256": "ffae3ef23131fc0bc00b96b1eddbff56938067efbe5d1a95060940db46d29629",
+  "acceptance_sha256": "dc907ea38ebeef3bb4d93bc6b524304b0bd8c3934e88eca437a9899576c39a07",
+  "spec_text_equal_after_crlf_normalization": true,
+  "preflight_original": {
+    "preflight_ok": true,
+    "issues": [],
+    "spec_sha256": "654D8E384B800D5EBD09B3905BD9D73A722C9E320A692194E23152BCA2B43BF8",
+    "plan_sha256": "DC907EA38EBEEF3BB4D93BC6B524304B0BD8C3934E88ECA437A9899576C39A07",
+    "automated_tests": 10,
+    "manual_checks": 3,
+    "review_state": "requires_independent_review",
+    "independent_acceptance": null,
+    "note": "Schema, coverage and hash checks do not prove expectation correctness or a game pass."
+  },
+  "preflight_pr4_with_actual_hash": {
+    "preflight_ok": true,
+    "issues": [],
+    "spec_sha256": "FFAE3EF23131FC0BC00B96B1EDDBFF56938067EFBE5D1A95060940DB46D29629",
+    "plan_sha256": "DC907EA38EBEEF3BB4D93BC6B524304B0BD8C3934E88ECA437A9899576C39A07",
+    "automated_tests": 10,
+    "manual_checks": 3,
+    "review_state": "requires_independent_review",
+    "independent_acceptance": null,
+    "note": "Schema, coverage and hash checks do not prove expectation correctness or a game pass."
+  },
+  "preflight_pr4_with_old_crlf_hash": {
+    "preflight_ok": false,
+    "issues": [
+      "spec SHA-256 differs from the recorded version"
+    ],
+    "spec_sha256": "FFAE3EF23131FC0BC00B96B1EDDBFF56938067EFBE5D1A95060940DB46D29629",
+    "plan_sha256": "DC907EA38EBEEF3BB4D93BC6B524304B0BD8C3934E88ECA437A9899576C39A07",
+    "automated_tests": 10,
+    "manual_checks": 3,
+    "review_state": "requires_independent_review",
+    "independent_acceptance": null,
+    "note": "Schema, coverage and hash checks do not prove expectation correctness or a game pass."
+  },
+  "automated_scenarios": 10,
+  "manual_checks": 3,
+  "assertion_expectations_reviewed": 79,
+  "state_assertions_reviewed": 28,
+  "errors": [],
+  "scenarios": [
+    {
+      "test": "T1",
+      "setup_and_check_steps": 8,
+      "assertions": 7,
+      "state_assertions": 0,
+      "checks": [
+        {
+          "step": 1,
+          "source": "value",
+          "field": "#guess",
+          "declared": "",
+          "independently_expected": "",
+          "matches": true
+        },
+        {
+          "step": 2,
+          "source": "text",
+          "field": "#attempts",
+          "declared": "0",
+          "independently_expected": "0",
+          "matches": true
+        },
+        {
+          "step": 3,
+          "source": "text",
+          "field": "#phase",
+          "declared": "Playing",
+          "independently_expected": "Playing",
+          "matches": true
+        },
+        {
+          "step": 4,
+          "source": "text",
+          "field": "#feedback",
+          "declared": "Ready",
+          "independently_expected": "Ready",
+          "matches": true
+        },
+        {
+          "step": 6,
+          "source": "text",
+          "field": "#attempts",
+          "declared": "0",
+          "independently_expected": "0",
+          "matches": true
+        },
+        {
+          "step": 7,
+          "source": "text",
+          "field": "#phase",
+          "declared": "Playing",
+          "independently_expected": "Playing",
+          "matches": true
+        },
+        {
+          "step": 8,
+          "source": "text",
+          "field": "#feedback",
+          "declared": "Ready",
+          "independently_expected": "Ready",
+          "matches": true
+        }
+      ]
+    },
+    {
+      "test": "T2",
+      "setup_and_check_steps": 16,
+      "assertions": 12,
+      "state_assertions": 6,
+      "checks": [
+        {
+          "step": 3,
+          "source": "text",
+          "field": "#attempts",
+          "declared": "1",
+          "independently_expected": "1",
+          "matches": true
+        },
+        {
+          "step": 4,
+          "source": "text",
+          "field": "#phase",
+          "declared": "Playing",
+          "independently_expected": "Playing",
+          "matches": true
+        },
+        {
+          "step": 5,
+          "source": "text",
+          "field": "#feedback",
+          "declared": "Too low",
+          "independently_expected": "Too low",
+          "matches": true
+        },
+        {
+          "step": 6,
+          "source": "state",
+          "field": "attempts",
+          "declared": 1,
+          "independently_expected": 1,
+          "matches": true
+        },
+        {
+          "step": 7,
+          "source": "state",
+          "field": "phase",
+          "declared": "Playing",
+          "independently_expected": "Playing",
+          "matches": true
+        },
+        {
+          "step": 8,
+          "source": "state",
+          "field": "feedback",
+          "declared": "Too low",
+          "independently_expected": "Too low",
+          "matches": true
+        },
+        {
+          "step": 11,
+          "source": "text",
+          "field": "#attempts",
+          "declared": "2",
+          "independently_expected": "2",
+          "matches": true
+        },
+        {
+          "step": 12,
+          "source": "text",
+          "field": "#phase",
+          "declared": "Playing",
+          "independently_expected": "Playing",
+          "matches": true
+        },
+        {
+          "step": 13,
+          "source": "text",
+          "field": "#feedback",
+          "declared": "Too high",
+          "independently_expected": "Too high",
+          "matches": true
+        },
+        {
+          "step": 14,
+          "source": "state",
+          "field": "attempts",
+          "declared": 2,
+          "independently_expected": 2,
+          "matches": true
+        },
+        {
+          "step": 15,
+          "source": "state",
+          "field": "phase",
+          "declared": "Playing",
+          "independently_expected": "Playing",
+          "matches": true
+        },
+        {
+          "step": 16,
+          "source": "state",
+          "field": "feedback",
+          "declared": "Too high",
+          "independently_expected": "Too high",
+          "matches": true
+        }
+      ]
+    },
+    {
+      "test": "T3",
+      "setup_and_check_steps": 18,
+      "assertions": 10,
+      "state_assertions": 1,
+      "checks": [
+        {
+          "step": 5,
+          "source": "text",
+          "field": "#attempts",
+          "declared": "1",
+          "independently_expected": "1",
+          "matches": true
+        },
+        {
+          "step": 6,
+          "source": "text",
+          "field": "#phase",
+          "declared": "Playing",
+          "independently_expected": "Playing",
+          "matches": true
+        },
+        {
+          "step": 7,
+          "source": "text",
+          "field": "#feedback",
+          "declared": "Invalid input",
+          "independently_expected": "Invalid input",
+          "matches": true
+        },
+        {
+          "step": 10,
+          "source": "text",
+          "field": "#attempts",
+          "declared": "1",
+          "independently_expected": "1",
+          "matches": true
+        },
+        {
+          "step": 11,
+          "source": "text",
+          "field": "#phase",
+          "declared": "Playing",
+          "independently_expected": "Playing",
+          "matches": true
+        },
+        {
+          "step": 12,
+          "source": "text",
+          "field": "#feedback",
+          "declared": "Invalid input",
+          "independently_expected": "Invalid input",
+          "matches": true
+        },
+        {
+          "step": 15,
+          "source": "text",
+          "field": "#attempts",
+          "declared": "1",
+          "independently_expected": "1",
+          "matches": true
+        },
+        {
+          "step": 16,
+          "source": "text",
+          "field": "#phase",
+          "declared": "Playing",
+          "independently_expected": "Playing",
+          "matches": true
+        },
+        {
+          "step": 17,
+          "source": "text",
+          "field": "#feedback",
+          "declared": "Invalid input",
+          "independently_expected": "Invalid input",
+          "matches": true
+        },
+        {
+          "step": 18,
+          "source": "state",
+          "field": "attempts",
+          "declared": 1,
+          "independently_expected": 1,
+          "matches": true
+        }
+      ]
+    },
+    {
+      "test": "T4",
+      "setup_and_check_steps": 12,
+      "assertions": 6,
+      "state_assertions": 3,
+      "checks": [
+        {
+          "step": 7,
+          "source": "text",
+          "field": "#attempts",
+          "declared": "3",
+          "independently_expected": "3",
+          "matches": true
+        },
+        {
+          "step": 8,
+          "source": "text",
+          "field": "#phase",
+          "declared": "Won",
+          "independently_expected": "Won",
+          "matches": true
+        },
+        {
+          "step": 9,
+          "source": "text",
+          "field": "#feedback",
+          "declared": "Correct",
+          "independently_expected": "Correct",
+          "matches": true
+        },
+        {
+          "step": 10,
+          "source": "state",
+          "field": "attempts",
+          "declared": 3,
+          "independently_expected": 3,
+          "matches": true
+        },
+        {
+          "step": 11,
+          "source": "state",
+          "field": "phase",
+          "declared": "Won",
+          "independently_expected": "Won",
+          "matches": true
+        },
+        {
+          "step": 12,
+          "source": "state",
+          "field": "feedback",
+          "declared": "Correct",
+          "independently_expected": "Correct",
+          "matches": true
+        }
+      ]
+    },
+    {
+      "test": "T5",
+      "setup_and_check_steps": 12,
+      "assertions": 6,
+      "state_assertions": 3,
+      "checks": [
+        {
+          "step": 7,
+          "source": "text",
+          "field": "#attempts",
+          "declared": "3",
+          "independently_expected": "3",
+          "matches": true
+        },
+        {
+          "step": 8,
+          "source": "text",
+          "field": "#phase",
+          "declared": "Lost",
+          "independently_expected": "Lost",
+          "matches": true
+        },
+        {
+          "step": 9,
+          "source": "text",
+          "field": "#feedback",
+          "declared": "No attempts left",
+          "independently_expected": "No attempts left",
+          "matches": true
+        },
+        {
+          "step": 10,
+          "source": "state",
+          "field": "attempts",
+          "declared": 3,
+          "independently_expected": 3,
+          "matches": true
+        },
+        {
+          "step": 11,
+          "source": "state",
+          "field": "phase",
+          "declared": "Lost",
+          "independently_expected": "Lost",
+          "matches": true
+        },
+        {
+          "step": 12,
+          "source": "state",
+          "field": "feedback",
+          "declared": "No attempts left",
+          "independently_expected": "No attempts left",
+          "matches": true
+        }
+      ]
+    },
+    {
+      "test": "T6",
+      "setup_and_check_steps": 13,
+      "assertions": 10,
+      "state_assertions": 6,
+      "checks": [
+        {
+          "step": 3,
+          "source": "state",
+          "field": "attempts",
+          "declared": 1,
+          "independently_expected": 1,
+          "matches": true
+        },
+        {
+          "step": 4,
+          "source": "state",
+          "field": "phase",
+          "declared": "Won",
+          "independently_expected": "Won",
+          "matches": true
+        },
+        {
+          "step": 5,
+          "source": "state",
+          "field": "feedback",
+          "declared": "Correct",
+          "independently_expected": "Correct",
+          "matches": true
+        },
+        {
+          "step": 7,
+          "source": "text",
+          "field": "#attempts",
+          "declared": "0",
+          "independently_expected": "0",
+          "matches": true
+        },
+        {
+          "step": 8,
+          "source": "text",
+          "field": "#phase",
+          "declared": "Playing",
+          "independently_expected": "Playing",
+          "matches": true
+        },
+        {
+          "step": 9,
+          "source": "text",
+          "field": "#feedback",
+          "declared": "Ready",
+          "independently_expected": "Ready",
+          "matches": true
+        },
+        {
+          "step": 10,
+          "source": "value",
+          "field": "#guess",
+          "declared": "",
+          "independently_expected": "",
+          "matches": true
+        },
+        {
+          "step": 11,
+          "source": "state",
+          "field": "attempts",
+          "declared": 0,
+          "independently_expected": 0,
+          "matches": true
+        },
+        {
+          "step": 12,
+          "source": "state",
+          "field": "phase",
+          "declared": "Playing",
+          "independently_expected": "Playing",
+          "matches": true
+        },
+        {
+          "step": 13,
+          "source": "state",
+          "field": "feedback",
+          "declared": "Ready",
+          "independently_expected": "Ready",
+          "matches": true
+        }
+      ]
+    },
+    {
+      "test": "T7",
+      "setup_and_check_steps": 9,
+      "assertions": 6,
+      "state_assertions": 0,
+      "checks": [
+        {
+          "step": 2,
+          "source": "text",
+          "field": "#attempts",
+          "declared": "0",
+          "independently_expected": "0",
+          "matches": true
+        },
+        {
+          "step": 3,
+          "source": "text",
+          "field": "#phase",
+          "declared": "Playing",
+          "independently_expected": "Playing",
+          "matches": true
+        },
+        {
+          "step": 4,
+          "source": "text",
+          "field": "#feedback",
+          "declared": "Invalid input",
+          "independently_expected": "Invalid input",
+          "matches": true
+        },
+        {
+          "step": 7,
+          "source": "text",
+          "field": "#attempts",
+          "declared": "0",
+          "independently_expected": "0",
+          "matches": true
+        },
+        {
+          "step": 8,
+          "source": "text",
+          "field": "#phase",
+          "declared": "Playing",
+          "independently_expected": "Playing",
+          "matches": true
+        },
+        {
+          "step": 9,
+          "source": "text",
+          "field": "#feedback",
+          "declared": "Invalid input",
+          "independently_expected": "Invalid input",
+          "matches": true
+        }
+      ]
+    },
+    {
+      "test": "T8",
+      "setup_and_check_steps": 15,
+      "assertions": 8,
+      "state_assertions": 3,
+      "checks": [
+        {
+          "step": 7,
+          "source": "text",
+          "field": "#phase",
+          "declared": "Lost",
+          "independently_expected": "Lost",
+          "matches": true
+        },
+        {
+          "step": 9,
+          "source": "text",
+          "field": "#attempts",
+          "declared": "0",
+          "independently_expected": "0",
+          "matches": true
+        },
+        {
+          "step": 10,
+          "source": "text",
+          "field": "#phase",
+          "declared": "Playing",
+          "independently_expected": "Playing",
+          "matches": true
+        },
+        {
+          "step": 11,
+          "source": "text",
+          "field": "#feedback",
+          "declared": "Ready",
+          "independently_expected": "Ready",
+          "matches": true
+        },
+        {
+          "step": 12,
+          "source": "value",
+          "field": "#guess",
+          "declared": "",
+          "independently_expected": "",
+          "matches": true
+        },
+        {
+          "step": 13,
+          "source": "state",
+          "field": "attempts",
+          "declared": 0,
+          "independently_expected": 0,
+          "matches": true
+        },
+        {
+          "step": 14,
+          "source": "state",
+          "field": "phase",
+          "declared": "Playing",
+          "independently_expected": "Playing",
+          "matches": true
+        },
+        {
+          "step": 15,
+          "source": "state",
+          "field": "feedback",
+          "declared": "Ready",
+          "independently_expected": "Ready",
+          "matches": true
+        }
+      ]
+    },
+    {
+      "test": "T9",
+      "setup_and_check_steps": 11,
+      "assertions": 8,
+      "state_assertions": 3,
+      "checks": [
+        {
+          "step": 3,
+          "source": "text",
+          "field": "#feedback",
+          "declared": "Invalid input",
+          "independently_expected": "Invalid input",
+          "matches": true
+        },
+        {
+          "step": 5,
+          "source": "text",
+          "field": "#attempts",
+          "declared": "0",
+          "independently_expected": "0",
+          "matches": true
+        },
+        {
+          "step": 6,
+          "source": "text",
+          "field": "#phase",
+          "declared": "Playing",
+          "independently_expected": "Playing",
+          "matches": true
+        },
+        {
+          "step": 7,
+          "source": "text",
+          "field": "#feedback",
+          "declared": "Ready",
+          "independently_expected": "Ready",
+          "matches": true
+        },
+        {
+          "step": 8,
+          "source": "value",
+          "field": "#guess",
+          "declared": "",
+          "independently_expected": "",
+          "matches": true
+        },
+        {
+          "step": 9,
+          "source": "state",
+          "field": "attempts",
+          "declared": 0,
+          "independently_expected": 0,
+          "matches": true
+        },
+        {
+          "step": 10,
+          "source": "state",
+          "field": "phase",
+          "declared": "Playing",
+          "independently_expected": "Playing",
+          "matches": true
+        },
+        {
+          "step": 11,
+          "source": "state",
+          "field": "feedback",
+          "declared": "Ready",
+          "independently_expected": "Ready",
+          "matches": true
+        }
+      ]
+    },
+    {
+      "test": "T10",
+      "setup_and_check_steps": 8,
+      "assertions": 6,
+      "state_assertions": 3,
+      "checks": [
+        {
+          "step": 3,
+          "source": "text",
+          "field": "#attempts",
+          "declared": "0",
+          "independently_expected": "0",
+          "matches": true
+        },
+        {
+          "step": 4,
+          "source": "text",
+          "field": "#phase",
+          "declared": "Playing",
+          "independently_expected": "Playing",
+          "matches": true
+        },
+        {
+          "step": 5,
+          "source": "text",
+          "field": "#feedback",
+          "declared": "Invalid input",
+          "independently_expected": "Invalid input",
+          "matches": true
+        },
+        {
+          "step": 6,
+          "source": "state",
+          "field": "attempts",
+          "declared": 0,
+          "independently_expected": 0,
+          "matches": true
+        },
+        {
+          "step": 7,
+          "source": "state",
+          "field": "phase",
+          "declared": "Playing",
+          "independently_expected": "Playing",
+          "matches": true
+        },
+        {
+          "step": 8,
+          "source": "state",
+          "field": "feedback",
+          "declared": "Invalid input",
+          "independently_expected": "Invalid input",
+          "matches": true
+        }
+      ]
+    }
+  ],
+  "manual_review": "See independent human review; not automatically marked passed.",
+  "limits": [
+    "Hand-transcribed finite rule calculation; not game execution or a correctness proof.",
+    "Manual checks remain unexecuted.",
+    "No production candidate or model configuration is frozen."
+  ]
+}
