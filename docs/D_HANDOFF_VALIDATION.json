@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-22",
+  "base_commit": "8eb314555011435cb44a70b79f11044ec63472d0",
+  "model_api_calls": 0,
+  "new_browser_runs": 0,
+  "s4": {
+    "schema_valid": true,
+    "automated_scenarios": 10,
+    "manual_checks": 2,
+    "literal_text_expectations": 84,
+    "enabled_control_assertions": 3,
+    "game_generated": false,
+    "independent_E_review": "pending"
+  },
+  "s3_static_reproduction": {
+    "expectations": 79,
+    "mismatches": 0,
+    "original_capsule_hashes_match": true,
+    "public_LF_plan_matches_original_JSON": true,
+    "existing_output_preserved": true
+  },
+  "c_saved_trace_reproduction": {
+    "cases": 2,
+    "both_stop_test_review": true,
+    "tampered_capsule_rejected_before_output": true,
+    "existing_output_preserved": true
+  },
+  "production_agent_changes": false,
+  "formal_S3_S4_execution": false,
+  "note": "Historical browser/test results are separately attributed; this handoff validation performs no new game generation or browser calibration."
+}
