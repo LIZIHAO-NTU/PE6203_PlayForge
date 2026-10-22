@@ -20,6 +20,17 @@ This is an experimental course project, not a guarantee of success on arbitrary 
 
 当前为研究测试版，不保证任意未知游戏稳定完成。范围是离线二维网页游戏；已测包含单人玩法和本机双人井字棋，不含联网多人、3D、后端或复杂引擎。
 
+### Team validation update / 小组验证进展 (2026-10-22)
+
+The integrated production baseline is main `8eb3145`, including B's planning experiment, C's repair-conflict guard and D's standalone evidence auditor. The auditor is not a production completion gate. A adds **9 controller-consistency tests**, without changing `agent/` or prompts: the focused suite passed **9/9**, and the complete browser-enabled suite passed **343/343**, with zero skips and no real model API calls. These results describe that baseline plus A's added test file, not an unknown-game success rate. E's independent review and the team's evaluation freeze remain pending; publication does not imply approval or merge.
+
+当前已集成的生产基线为 main `8eb3145`，包含 B 的规划实验、C 的修复冲突保护和 D 的独立证据审计工具；审计工具尚未接入生产完成判定。本次 A 新增 **9 项控制层一致性测试**，未修改 `agent/` 或提示词：定向测试 **9/9**、完整浏览器回归 **343/343**，均零跳过、无真实模型 API 调用。结果对应该基线加 A 的新增测试文件，不是未知游戏成功率。E 的独立复核和全组评估冻结仍待完成；上传不等于批准或合并。
+
+- [Team handoff and next actions / 小组交接与行动清单](docs/TEAM_HANDOFF_20261022.md)
+- [A's method and E's reproduction checklist / A 的方法与 E 的复核清单](docs/A_CONTROLLER_CONSISTENCY.md)
+- [Recorded results and source fingerprints / 验证结果与源码指纹](docs/a_controller_consistency_results.json)
+- [Controller-consistency tests / 控制层一致性测试](tests/test_controller_consistency.py)
+
 ### Game UI language / 游戏界面语言
 
 Player-facing text defaults to **English**, even when the specification is written in another language. An explicit UI language requirement takes precedence, including bilingual or per-element instructions. Exact required display strings are preserved unless translation is explicitly requested. Technical identifiers, selectors, state keys and contract values are not translated. Planning, optional pre-freeze review and code generation/repair share this policy; frozen tests remain unchanged. No language switcher is added unless requested. This is a prompt policy, not a guarantee of model compliance; verify the generated UI. Existing saved games are unaffected.

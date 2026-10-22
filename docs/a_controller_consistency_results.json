@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "recorded_date": "2026-10-22",
+  "owner": "A",
+  "independent_reviewer": "E",
+  "independent_review_status": "pending",
+  "baseline_commit": "8eb314555011435cb44a70b79f11044ec63472d0",
+  "tested_code_state": "Baseline main plus the uncommitted A test file identified below; documentation is not executable input.",
+  "production_agent_modified": false,
+  "status_at_recording": {
+    "new_commit": null,
+    "pull_request": null,
+    "pushed": false,
+    "formal_candidate_frozen": false
+  },
+  "environment": {
+    "os": "Windows",
+    "architecture": "AMD64",
+    "python": "3.11.9",
+    "playwright": "1.63.0",
+    "pyee": "13.0.1",
+    "greenlet": "3.5.6",
+    "typing_extensions": "4.16.0",
+    "browser_channel": "msedge",
+    "browser_version": "155.0.4283.62",
+    "MVP_BROWSER_TESTS": "1",
+    "PYTHONUTF8": "1",
+    "temporary_outputs": "Task-owned .codex-tmp; removed after validation"
+  },
+  "source_file_sha256": {
+    "tests/test_controller_consistency.py": "1e55d41904edcfd705b099a3b26a12c46df4a2a6a2819e292d508b234a4e5e15",
+    "agent/runner.py": "21ffa6a03141a6d79260b5fb1bff5d4c3b9858b77d2e570fc4ee27013bb1ee6d",
+    "agent/state.py": "b579cb18407e8ebafa1db9f99851cc9e6efbd599ea9d4266a065b2ca04162348",
+    "agent/artifacts.py": "544b824cac4578de014cf386854f508b4826118f9524e3509df99f9d37ff25e3",
+    "agent/diagnostics.py": "d27325f30dd0c7dddd6aec1fbf70f6714e676ce0ecec2ece51b95da8248f971e",
+    "agent/feedback.py": "655c69554753a733f37690b70219d81a53f4f32719bfacfaf11842f29ac47adb",
+    "agent/contracts.py": "1754b7b7078cfd88d3a9ed471bcfcc1d47bc01d17b77bb06d303bc2af40dfa2a",
+    "agent/quality.py": "309b138503e6bd71113b4d6c75a650b28645b16d18930873024d944e928bd984"
+  },
+  "hash_semantics": "SHA-256 of actual worktree bytes when validated. Other checkouts may use different LF/CRLF bytes; the baseline Git commit and test source identity must also be checked.",
+  "final_focused_browser_run": {
+    "total": 9,
+    "passed": 9,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "elapsed_seconds": 5.205,
+    "successful_test_ids": [
+      "test_controller_consistency.ControllerConsistencyBrowserTests.test_conflict_pause_preserves_real_browser_candidate_and_fixed_plan",
+      "test_controller_consistency.ControllerConsistencyTests.test_call_budget_keeps_verified_base_and_never_claims_success",
+      "test_controller_consistency.ControllerConsistencyTests.test_changed_plan_is_detected_not_repaired_or_reported_as_success",
+      "test_controller_consistency.ControllerConsistencyTests.test_elapsed_budget_keeps_base_without_a_second_model_request",
+      "test_controller_consistency.ControllerConsistencyTests.test_equal_score_regression_does_not_replace_stable_candidate",
+      "test_controller_consistency.ControllerConsistencyTests.test_failed_plan_recovery_cannot_upgrade_startup_to_functional_success",
+      "test_controller_consistency.ControllerConsistencyTests.test_interrupt_before_any_verdict_preserves_only_unverified_source",
+      "test_controller_consistency.ControllerConsistencyTests.test_interrupt_during_repair_preserves_first_verified_candidate",
+      "test_controller_consistency.ControllerConsistencyTests.test_successful_self_checks_are_not_full_game_acceptance"
+    ]
+  },
+  "final_full_browser_regression": {
+    "total": 343,
+    "passed": 343,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "elapsed_seconds": 190.925,
+    "test_discovery": "python -B -m unittest discover -s tests",
+    "notes": "All opt-in browser checks enabled. This is framework regression, not autonomous game-generation success."
+  },
+  "model_usage": {
+    "real_model_api_calls": 0,
+    "response_source": "Scripted fixtures; no real credential loaded by the A tests",
+    "focused_guard": "agent.provider.open_request raises on use",
+    "full_regression_guard": "Unmocked provider requests limited to localhost, 127.0.0.1 and ::1; external model requests blocked",
+    "simulated_requests_are_not_api_usage": true
+  },
+  "not_performed": [
+    "Real-model game generation",
+    "Formal S1-S5 acceptance",
+    "Independent E review",
+    "Second-machine reproduction",
+    "Final teacher model or delivery-rule validation"
+  ],
+  "limits": [
+    "Tests exercise selected controller paths, not every possible failure or game rule.",
+    "Elapsed-budget case uses a virtual monotonic clock; it is not an API or browser hard-timeout experiment.",
+    "Tampered-plan case checks detection and refusal of success, not automatic restoration or malicious-process resistance.",
+    "Synthetic regression scores are controller inputs, not independent gameplay truths.",
+    "One new test uses a real browser but still scripted model responses.",
+    "No original run directory is published by this test suite; temporary fixtures are cleaned. Reproduce from the test file and recorded versions.",
+    "Author validation is not independent approval or a candidate freeze."
+  ]
+}
