@@ -1,0 +1,177 @@
+{
+  "supported": true,
+  "title": "S5 Pulse Target independent acceptance",
+  "gameplay": {
+    "interaction_model": "real_time",
+    "input_mode": "mixed",
+    "core_loop": "Move continuously with the arrow keys and press Space while centered inside the fixed target zone.",
+    "invariants": [
+      "playerX remains within 10 through 350.",
+      "Space outside the target zone does not change score or phase.",
+      "A successful target lock produces score 1 and Won.",
+      "All gameplay state is stable after Won."
+    ]
+  },
+  "development_plan": [
+    "Run every automated test from its own fresh page.",
+    "Use goal-based movement checks instead of relying on one exact key-hold duration.",
+    "Keep this acceptance plan outside all generation, planning and repair messages.",
+    "Preserve the frozen plan and original failures without changing expected values after generation."
+  ],
+  "state_contract": {
+    "playerX": "Actual horizontal center of the player in canvas coordinates.",
+    "score": "Actual score, initially 0 and exactly 1 after winning.",
+    "phase": "Exact current phase: Playing or Won."
+  },
+  "requirements": [
+    {"id": "R1", "text": "The initial player position, score and phase are correct.", "verification": "automated", "priority": "core"},
+    {"id": "R2", "text": "Arrow keys produce continuous horizontal movement.", "verification": "automated", "priority": "core"},
+    {"id": "R3", "text": "Movement is clamped at both canvas boundaries.", "verification": "automated", "priority": "core"},
+    {"id": "R4", "text": "Space outside the target zone is a no-op.", "verification": "automated", "priority": "core"},
+    {"id": "R5", "text": "The target is reachable and a successful lock wins.", "verification": "automated", "priority": "core"},
+    {"id": "R6", "text": "Movement and Space are ignored and state remains stable after Won.", "verification": "automated", "priority": "core"},
+    {"id": "R7", "text": "Restart from Won restores the exact initial state.", "verification": "automated", "priority": "core"},
+    {"id": "R8", "text": "The player, target, instructions and status are clearly visible.", "verification": "manual", "priority": "visual"}
+  ],
+  "tests": [
+    {
+      "id": "T1",
+      "description": "Fresh-page initial state",
+      "purpose": "initial",
+      "requirement_ids": ["R1"],
+      "evidence": {
+        "spec_quote": "The player marker starts centered at playerX=30 ... score=0 and phase Playing.",
+        "expected_basis": "A fresh page reports playerX 30, score 0 and Playing, with score and phase matching the DOM."
+      },
+      "steps": [
+        {"action": "assert", "source": "state", "path": "playerX", "op": "eq", "value": 30},
+        {"action": "assert", "source": "state", "path": "score", "op": "eq", "value": 0},
+        {"action": "assert", "source": "state", "path": "phase", "op": "eq", "value": "Playing"},
+        {"action": "assert_consistent", "state_path": "score", "source": "text", "selector": "#score", "coerce": "number"},
+        {"action": "assert_consistent", "state_path": "phase", "source": "text", "selector": "#phase"}
+      ]
+    },
+    {
+      "id": "T2",
+      "description": "Holding ArrowRight moves the player continuously",
+      "purpose": "legal_action",
+      "requirement_ids": ["R2"],
+      "evidence": {
+        "spec_quote": "The player marker ... may move while ArrowLeft or ArrowRight is held.",
+        "expected_basis": "Holding ArrowRight from playerX 30 must produce a greater position while remaining in Playing."
+      },
+      "steps": [
+        {"action": "key", "key": "ArrowRight", "hold_ms": 300},
+        {"action": "assert", "source": "state", "path": "playerX", "op": "gt", "value": 30},
+        {"action": "assert", "source": "state", "path": "playerX", "op": "lt", "value": 170},
+        {"action": "assert", "source": "state", "path": "phase", "op": "eq", "value": "Playing"}
+      ]
+    },
+    {
+      "id": "T3",
+      "description": "Both horizontal boundaries clamp the player center",
+      "purpose": "legal_action",
+      "requirement_ids": ["R3"],
+      "evidence": {
+        "spec_quote": "Movement ... clamps the player's center to the inclusive range 10 through 350.",
+        "expected_basis": "Long movement toward each edge reaches but never crosses 10 and 350."
+      },
+      "steps": [
+        {"action": "key_until", "key": "ArrowLeft", "until": {"source": "state", "path": "playerX", "op": "eq", "value": 10}, "timeout_ms": 1000},
+        {"action": "key", "key": "ArrowLeft", "hold_ms": 250},
+        {"action": "assert", "source": "state", "path": "playerX", "op": "eq", "value": 10},
+        {"action": "key_until", "key": "ArrowRight", "until": {"source": "state", "path": "playerX", "op": "eq", "value": 350}, "timeout_ms": 4000},
+        {"action": "key", "key": "ArrowRight", "hold_ms": 250},
+        {"action": "assert", "source": "state", "path": "playerX", "op": "eq", "value": 350}
+      ]
+    },
+    {
+      "id": "T4",
+      "description": "Space outside the target is a no-op",
+      "purpose": "invalid_action",
+      "requirement_ids": ["R4"],
+      "evidence": {
+        "spec_quote": "Pressing Space outside the zone has no effect.",
+        "expected_basis": "At the initial playerX 30, Space leaves playerX 30, score 0 and Playing."
+      },
+      "steps": [
+        {"action": "key", "key": "Space"},
+        {"action": "assert", "source": "state", "path": "playerX", "op": "eq", "value": 30},
+        {"action": "assert", "source": "state", "path": "score", "op": "eq", "value": 0},
+        {"action": "assert", "source": "state", "path": "phase", "op": "eq", "value": "Playing"}
+      ]
+    },
+    {
+      "id": "T5",
+      "description": "The fixed target is reachable and Space wins",
+      "purpose": "terminal",
+      "requirement_ids": ["R5"],
+      "evidence": {
+        "spec_quote": "Pressing Space wins only when the player's center is inside that inclusive target zone ... score to 1 and phase to Won.",
+        "expected_basis": "ArrowRight can reach playerX at least 175, which is inside 170 through 190; Space then produces score 1 and Won."
+      },
+      "steps": [
+        {"action": "key_until", "key": "ArrowRight", "until": {"source": "state", "path": "playerX", "op": "ge", "value": 175}, "timeout_ms": 3000, "poll_ms": 25},
+        {"action": "assert", "source": "state", "path": "playerX", "op": "le", "value": 190},
+        {"action": "key", "key": "Space"},
+        {"action": "assert", "source": "state", "path": "score", "op": "eq", "value": 1},
+        {"action": "assert", "source": "state", "path": "phase", "op": "eq", "value": "Won"},
+        {"action": "assert_consistent", "state_path": "score", "source": "text", "selector": "#score", "coerce": "number"},
+        {"action": "assert_consistent", "state_path": "phase", "source": "text", "selector": "#phase"}
+      ]
+    },
+    {
+      "id": "T6",
+      "description": "Won state ignores input and remains stable",
+      "purpose": "terminal",
+      "requirement_ids": ["R6"],
+      "evidence": {
+        "spec_quote": "After Won, movement and Space have no effect and the state remains stable.",
+        "expected_basis": "After a successful lock, further ArrowRight and Space input leave playerX unchanged, score 1 and Won; sampling confirms short-window stability."
+      },
+      "setup_steps": [
+        {"action": "key_until", "key": "ArrowRight", "until": {"source": "state", "path": "playerX", "op": "ge", "value": 175}, "timeout_ms": 3000, "poll_ms": 25},
+        {"action": "key", "key": "Space"},
+        {"action": "assert", "source": "state", "path": "phase", "op": "eq", "value": "Won"},
+        {"action": "capture", "name": "won_state"}
+      ],
+      "steps": [
+        {"action": "key", "key": "ArrowRight", "hold_ms": 500},
+        {"action": "key", "key": "Space"},
+        {"action": "assert", "source": "state", "path": "playerX", "op": "eq", "value_from": {"capture": "won_state", "path": "playerX"}},
+        {"action": "assert", "source": "state", "path": "score", "op": "eq", "value": 1},
+        {"action": "assert", "source": "state", "path": "phase", "op": "eq", "value": "Won"},
+        {"action": "assert_stable", "source": "state", "path": "playerX", "duration_ms": 400, "samples": 4}
+      ]
+    },
+    {
+      "id": "T7",
+      "description": "Restart from Won restores the exact initial state",
+      "purpose": "reset",
+      "requirement_ids": ["R7"],
+      "evidence": {
+        "spec_quote": "#restart always restores exactly playerX=30, score=0 and phase Playing without reloading the page.",
+        "expected_basis": "After a reachable win, clicking Restart returns all state fields and visible score/phase to their initial values."
+      },
+      "setup_steps": [
+        {"action": "key_until", "key": "ArrowRight", "until": {"source": "state", "path": "playerX", "op": "ge", "value": 175}, "timeout_ms": 3000, "poll_ms": 25},
+        {"action": "key", "key": "Space"},
+        {"action": "assert", "source": "state", "path": "phase", "op": "eq", "value": "Won"}
+      ],
+      "steps": [
+        {"action": "click", "selector": "#restart"},
+        {"action": "assert", "source": "state", "path": "playerX", "op": "eq", "value": 30},
+        {"action": "assert", "source": "state", "path": "score", "op": "eq", "value": 0},
+        {"action": "assert", "source": "state", "path": "phase", "op": "eq", "value": "Playing"},
+        {"action": "assert_consistent", "state_path": "score", "source": "text", "selector": "#score", "coerce": "number"},
+        {"action": "assert_consistent", "state_path": "phase", "source": "text", "selector": "#phase"}
+      ]
+    }
+  ],
+  "manual_checks": [
+    {
+      "requirement_id": "R8",
+      "instruction": "On desktop and a narrow viewport, confirm the 360 by 220 canvas, player and target are visibly distinct; instructions, score, phase and Restart remain readable without overlap."
+    }
+  ]
+}

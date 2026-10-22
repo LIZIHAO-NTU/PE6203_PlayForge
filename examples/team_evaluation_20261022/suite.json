@@ -1,0 +1,17 @@
+{
+  "description": "Draft S4 and S5 candidate-evaluation specifications. Freeze hashes before use; acceptance plans must never be provided to generation or repair.",
+  "cases": [
+    {
+      "id": "s4_reservoir_relay",
+      "family": "resource_cap_terminal",
+      "spec": "s4_reservoir_relay.md",
+      "acceptance_plan": "s4_reservoir_relay.acceptance.json"
+    },
+    {
+      "id": "s5_pulse_target",
+      "family": "real_time_target_stability",
+      "spec": "s5_pulse_target.md",
+      "acceptance_plan": "s5_pulse_target.acceptance.json"
+    }
+  ]
+}

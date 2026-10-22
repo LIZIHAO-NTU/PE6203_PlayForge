@@ -1,0 +1,176 @@
+{
+  "supported": true,
+  "title": "S4 Reservoir Relay independent acceptance",
+  "gameplay": {
+    "interaction_model": "turn_based",
+    "input_mode": "pointer",
+    "core_loop": "Pump water within the cap, spend water to fill tanks, and fill two tanks to win.",
+    "invariants": [
+      "Water is always between 0 and 10.",
+      "Fill changes water and tanks only when at least 4 water is available.",
+      "Two filled tanks immediately produce Won.",
+      "Pump and Fill do not change state after Won."
+    ]
+  },
+  "development_plan": [
+    "Run every automated test from its own fresh page.",
+    "Keep this acceptance plan outside all generation, planning and repair messages.",
+    "Preserve the frozen plan and original failures without changing expected values after generation."
+  ],
+  "state_contract": {
+    "water": "Actual current water as a number from 0 to 10.",
+    "tanks": "Actual number of filled tanks.",
+    "phase": "Exact current phase: Playing or Won."
+  },
+  "requirements": [
+    {"id": "R1", "text": "Initial water, tanks and phase are correct and visible.", "verification": "automated", "priority": "core"},
+    {"id": "R2", "text": "Pump adds three water without exceeding ten.", "verification": "automated", "priority": "core"},
+    {"id": "R3", "text": "A legal Fill spends four water and adds one tank.", "verification": "automated", "priority": "core"},
+    {"id": "R4", "text": "Fill below four water is a no-op.", "verification": "automated", "priority": "core"},
+    {"id": "R5", "text": "The second tank wins and terminal actions are ignored.", "verification": "automated", "priority": "core"},
+    {"id": "R6", "text": "Restart restores the exact initial state from Won.", "verification": "automated", "priority": "core"},
+    {"id": "R7", "text": "Rules, controls, counters and terminal status are visibly understandable.", "verification": "manual", "priority": "visual"}
+  ],
+  "tests": [
+    {
+      "id": "T1",
+      "description": "Fresh-page initial state and DOM consistency",
+      "purpose": "initial",
+      "requirement_ids": ["R1"],
+      "evidence": {
+        "spec_quote": "The game starts with 6 water, 0 filled tanks and phase Playing.",
+        "expected_basis": "A fresh page therefore reports and displays water 6, tanks 0 and Playing."
+      },
+      "steps": [
+        {"action": "assert", "source": "state", "path": "water", "op": "eq", "value": 6},
+        {"action": "assert", "source": "state", "path": "tanks", "op": "eq", "value": 0},
+        {"action": "assert", "source": "state", "path": "phase", "op": "eq", "value": "Playing"},
+        {"action": "assert_consistent", "state_path": "water", "source": "text", "selector": "#water", "coerce": "number"},
+        {"action": "assert_consistent", "state_path": "tanks", "source": "text", "selector": "#tanks", "coerce": "number"},
+        {"action": "assert_consistent", "state_path": "phase", "source": "text", "selector": "#phase"}
+      ]
+    },
+    {
+      "id": "T2",
+      "description": "Pump changes water by three",
+      "purpose": "legal_action",
+      "requirement_ids": ["R2"],
+      "evidence": {
+        "spec_quote": "The Pump action adds exactly 3 water, capped at 10.",
+        "expected_basis": "Starting at 6, one Pump produces 9."
+      },
+      "steps": [
+        {"action": "click", "selector": "#pump"},
+        {"action": "assert", "source": "state", "path": "water", "op": "eq", "value": 9},
+        {"action": "assert_consistent", "state_path": "water", "source": "text", "selector": "#water", "coerce": "number"}
+      ]
+    },
+    {
+      "id": "T3",
+      "description": "Repeated Pump respects the cap",
+      "purpose": "legal_action",
+      "requirement_ids": ["R2"],
+      "evidence": {
+        "spec_quote": "The Pump action adds exactly 3 water, capped at 10.",
+        "expected_basis": "Starting at 6, two Pumps would reach 12 without the cap, so the actual result is 10."
+      },
+      "steps": [
+        {"action": "click", "selector": "#pump"},
+        {"action": "click", "selector": "#pump"},
+        {"action": "assert", "source": "state", "path": "water", "op": "eq", "value": 10},
+        {"action": "assert", "source": "state", "path": "phase", "op": "eq", "value": "Playing"}
+      ]
+    },
+    {
+      "id": "T4",
+      "description": "Legal Fill spends four and adds one tank",
+      "purpose": "legal_action",
+      "requirement_ids": ["R3"],
+      "evidence": {
+        "spec_quote": "The Fill action costs exactly 4 water and adds exactly one filled tank.",
+        "expected_basis": "Starting at 6 water and 0 tanks, one legal Fill leaves 2 water and 1 tank."
+      },
+      "steps": [
+        {"action": "click", "selector": "#fill"},
+        {"action": "assert", "source": "state", "path": "water", "op": "eq", "value": 2},
+        {"action": "assert", "source": "state", "path": "tanks", "op": "eq", "value": 1},
+        {"action": "assert", "source": "state", "path": "phase", "op": "eq", "value": "Playing"}
+      ]
+    },
+    {
+      "id": "T5",
+      "description": "Insufficient-water Fill is an immediate no-op",
+      "purpose": "invalid_action",
+      "requirement_ids": ["R4"],
+      "evidence": {
+        "spec_quote": "Fill has no effect when water is below 4.",
+        "expected_basis": "The first Fill leaves 2 water and 1 tank; a second Fill must retain those exact values and Playing."
+      },
+      "setup_steps": [
+        {"action": "click", "selector": "#fill"},
+        {"action": "assert", "source": "state", "path": "water", "op": "eq", "value": 2},
+        {"action": "assert", "source": "state", "path": "tanks", "op": "eq", "value": 1}
+      ],
+      "steps": [
+        {"action": "click", "selector": "#fill"},
+        {"action": "assert", "source": "state", "path": "water", "op": "eq", "value": 2},
+        {"action": "assert", "source": "state", "path": "tanks", "op": "eq", "value": 1},
+        {"action": "assert", "source": "state", "path": "phase", "op": "eq", "value": "Playing"}
+      ]
+    },
+    {
+      "id": "T6",
+      "description": "Second tank wins and terminal actions are locked",
+      "purpose": "terminal",
+      "requirement_ids": ["R5"],
+      "evidence": {
+        "spec_quote": "Reaching 2 filled tanks immediately changes the phase to Won. After Won, Pump and Fill have no effect.",
+        "expected_basis": "Fill, Pump, Fill traces 6/0 to 2/1 to 5/1 to 1/2 Won; later Pump and Fill retain 1/2 Won."
+      },
+      "steps": [
+        {"action": "click", "selector": "#fill"},
+        {"action": "click", "selector": "#pump"},
+        {"action": "click", "selector": "#fill"},
+        {"action": "assert", "source": "state", "path": "water", "op": "eq", "value": 1},
+        {"action": "assert", "source": "state", "path": "tanks", "op": "eq", "value": 2},
+        {"action": "assert", "source": "state", "path": "phase", "op": "eq", "value": "Won"},
+        {"action": "click", "selector": "#pump"},
+        {"action": "click", "selector": "#fill"},
+        {"action": "assert", "source": "state", "path": "water", "op": "eq", "value": 1},
+        {"action": "assert", "source": "state", "path": "tanks", "op": "eq", "value": 2},
+        {"action": "assert", "source": "state", "path": "phase", "op": "eq", "value": "Won"},
+        {"action": "assert_consistent", "state_path": "phase", "source": "text", "selector": "#phase"}
+      ]
+    },
+    {
+      "id": "T7",
+      "description": "Restart from Won restores the exact initial state",
+      "purpose": "reset",
+      "requirement_ids": ["R6"],
+      "evidence": {
+        "spec_quote": "Restart always restores exactly 6 water, 0 filled tanks and phase Playing.",
+        "expected_basis": "After reaching Won through Fill, Pump, Fill, Restart returns all three state fields to their initial values."
+      },
+      "setup_steps": [
+        {"action": "click", "selector": "#fill"},
+        {"action": "click", "selector": "#pump"},
+        {"action": "click", "selector": "#fill"},
+        {"action": "assert", "source": "state", "path": "phase", "op": "eq", "value": "Won"}
+      ],
+      "steps": [
+        {"action": "click", "selector": "#restart"},
+        {"action": "assert", "source": "state", "path": "water", "op": "eq", "value": 6},
+        {"action": "assert", "source": "state", "path": "tanks", "op": "eq", "value": 0},
+        {"action": "assert", "source": "state", "path": "phase", "op": "eq", "value": "Playing"},
+        {"action": "assert_consistent", "state_path": "water", "source": "text", "selector": "#water", "coerce": "number"},
+        {"action": "assert_consistent", "state_path": "tanks", "source": "text", "selector": "#tanks", "coerce": "number"}
+      ]
+    }
+  ],
+  "manual_checks": [
+    {
+      "requirement_id": "R7",
+      "instruction": "On a fresh page, confirm the English rules explain Pump, Fill, the water cap, the win condition and Restart; confirm all three buttons and the water, tanks and phase displays are visible without overlap."
+    }
+  ]
+}
