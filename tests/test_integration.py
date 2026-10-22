@@ -349,6 +349,10 @@ class DeliveryTests(TempTest):
         self.assertEqual(manifest["original_run_agent_version"],"0.4.0")
         self.assertFalse((output/".env").exists())
         self.assertTrue((output/"agent/README.md").exists())
+        readme=(output/"README.md").read_text(encoding="utf-8")
+        self.assertIn("python -m agent SPECIFICATION.md",readme)
+        self.assertIn("supply your approved Markdown specification as SPECIFICATION.md",readme)
+        self.assertFalse((output/"game_design_prompt.md").exists())
         self.assertEqual((source/"game/index.html").read_bytes(),(output/"game/index.html").read_bytes())
         self.assertFalse((source/"DELIVERY.json").exists())
 
