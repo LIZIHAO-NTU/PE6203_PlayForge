@@ -1,0 +1,1211 @@
+{
+  "supported": true,
+  "title": "S4 draft independent acceptance - Tank Rescue",
+  "development_plan": [
+    "Independent reviewer uses this plan only after autonomous game generation has ended; never provide it to generation or repair."
+  ],
+  "state_contract": {
+    "water": "Actual stored water, integer 0..5",
+    "moves": "Actual remaining moves, integer 0..4",
+    "delivered": "Actual deliveries, integer 0..2",
+    "phase": "Actual Playing, Won or Lost"
+  },
+  "requirements": [
+    {
+      "id": "R1",
+      "text": "Initially water=2, moves=4, delivered=0 and phase=Playing. Water capacity is 5; the goal is 2 deliveries.",
+      "verification": "automated"
+    },
+    {
+      "id": "R2",
+      "text": "While Playing, Pump adds 3 water capped at 5 and consumes exactly 1 move, even when the tank was already full.",
+      "verification": "automated"
+    },
+    {
+      "id": "R3",
+      "text": "While Playing with water below 4, Deliver is a complete no-op: water, moves, delivered and phase all remain unchanged.",
+      "verification": "automated"
+    },
+    {
+      "id": "R4",
+      "text": "While Playing with water at least 4, Deliver consumes exactly 4 water and 1 move and adds exactly 1 delivery.",
+      "verification": "automated"
+    },
+    {
+      "id": "R5",
+      "text": "After each move-consuming action, check the delivery goal first: delivered=2 means Won; otherwise moves=0 means Lost; otherwise stay Playing. Winning on the final move is Won, not Lost.",
+      "verification": "automated"
+    },
+    {
+      "id": "R6",
+      "text": "In Won or Lost, Pump and Deliver must not change any value. They may remain enabled and ignore activation, or be disabled.",
+      "verification": "manual"
+    },
+    {
+      "id": "R7",
+      "text": "Restart is always enabled and immediately restores all four initial values in every phase, including after an invalid action.",
+      "verification": "automated"
+    },
+    {
+      "id": "R8",
+      "text": "Show short English instructions explaining the initial resources, water capacity, Pump cost at the cap, Deliver cost, insufficient-water no-op, delivery goal, move exhaustion, win-before-loss priority, terminal lock and Restart. Give each button an understandable accessible name.",
+      "verification": "manual"
+    },
+    {
+      "id": "R9",
+      "text": "Use native buttons #pump, #deliver and #restart. The visible #water, #moves and #delivered contain bare integers, and #phase contains exactly Playing, Won or Lost. Mark a visible game area with data-game-surface. Expose window.__gameTest.getState() as a fresh read-only snapshot of actual water, moves, delivered and phase; provide no state setters.",
+      "verification": "automated"
+    }
+  ],
+  "tests": [
+    {
+      "id": "T1",
+      "description": "Initial visible values, actual-state consistency and no passive resource changes",
+      "requirement_ids": [
+        "R1",
+        "R9"
+      ],
+      "purpose": "initial",
+      "evidence": {
+        "spec_quote": "Initially water=2, moves=4, delivered=0 and phase=Playing. Water capacity is 5; the goal is 2 deliveries.",
+        "expected_basis": "Initial visible values, actual-state consistency and no passive resource changes; explicit expected values are checked against the rule arithmetic before any game is generated."
+      },
+      "steps": [
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#water",
+          "op": "eq",
+          "value": "2"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#moves",
+          "op": "eq",
+          "value": "4"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#delivered",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "water",
+          "source": "text",
+          "selector": "#water",
+          "coerce": "number"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "moves",
+          "source": "text",
+          "selector": "#moves",
+          "coerce": "number"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "delivered",
+          "source": "text",
+          "selector": "#delivered",
+          "coerce": "number"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "phase",
+          "source": "text",
+          "selector": "#phase"
+        },
+        {
+          "action": "assert_stable",
+          "source": "text",
+          "selector": "#water",
+          "duration_ms": 300,
+          "samples": 3
+        },
+        {
+          "action": "assert_stable",
+          "source": "text",
+          "selector": "#moves",
+          "duration_ms": 300,
+          "samples": 3
+        },
+        {
+          "action": "assert",
+          "source": "enabled",
+          "selector": "#pump",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "action": "assert",
+          "source": "enabled",
+          "selector": "#deliver",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "action": "assert",
+          "source": "enabled",
+          "selector": "#restart",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "action": "click",
+          "selector": "#restart"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#water",
+          "op": "eq",
+          "value": "2"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#moves",
+          "op": "eq",
+          "value": "4"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#delivered",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "description": "Pump reaches the cap, then two further pumps still consume one move each",
+      "requirement_ids": [
+        "R2",
+        "R9"
+      ],
+      "purpose": "legal_action",
+      "evidence": {
+        "spec_quote": "While Playing, Pump adds 3 water capped at 5 and consumes exactly 1 move, even when the tank was already full.",
+        "expected_basis": "Pump reaches the cap, then two further pumps still consume one move each; explicit expected values are checked against the rule arithmetic before any game is generated."
+      },
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#pump"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#water",
+          "op": "eq",
+          "value": "5"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#moves",
+          "op": "eq",
+          "value": "3"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#delivered",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "click",
+          "selector": "#pump"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#water",
+          "op": "eq",
+          "value": "5"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#moves",
+          "op": "eq",
+          "value": "2"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#delivered",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "click",
+          "selector": "#pump"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#water",
+          "op": "eq",
+          "value": "5"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#moves",
+          "op": "eq",
+          "value": "1"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#delivered",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        }
+      ]
+    },
+    {
+      "id": "T3",
+      "description": "Two insufficient-water deliveries from initial state change nothing",
+      "requirement_ids": [
+        "R3",
+        "R9"
+      ],
+      "purpose": "invalid_action",
+      "evidence": {
+        "spec_quote": "While Playing with water below 4, Deliver is a complete no-op: water, moves, delivered and phase all remain unchanged.",
+        "expected_basis": "Two insufficient-water deliveries from initial state change nothing; explicit expected values are checked against the rule arithmetic before any game is generated."
+      },
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#deliver"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#water",
+          "op": "eq",
+          "value": "2"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#moves",
+          "op": "eq",
+          "value": "4"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#delivered",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "click",
+          "selector": "#deliver"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#water",
+          "op": "eq",
+          "value": "2"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#moves",
+          "op": "eq",
+          "value": "4"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#delivered",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "water",
+          "source": "text",
+          "selector": "#water",
+          "coerce": "number"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "moves",
+          "source": "text",
+          "selector": "#moves",
+          "coerce": "number"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "delivered",
+          "source": "text",
+          "selector": "#delivered",
+          "coerce": "number"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "phase",
+          "source": "text",
+          "selector": "#phase"
+        }
+      ]
+    },
+    {
+      "id": "T4",
+      "description": "One valid delivery deducts exactly four water and one move; a following insufficient attempt changes nothing",
+      "requirement_ids": [
+        "R3",
+        "R4",
+        "R9"
+      ],
+      "purpose": "legal_action",
+      "evidence": {
+        "spec_quote": "While Playing with water below 4, Deliver is a complete no-op: water, moves, delivered and phase all remain unchanged.",
+        "expected_basis": "One valid delivery deducts exactly four water and one move; a following insufficient attempt changes nothing; explicit expected values are checked against the rule arithmetic before any game is generated."
+      },
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#pump"
+        },
+        {
+          "action": "click",
+          "selector": "#deliver"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#water",
+          "op": "eq",
+          "value": "1"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#moves",
+          "op": "eq",
+          "value": "2"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#delivered",
+          "op": "eq",
+          "value": "1"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "click",
+          "selector": "#deliver"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#water",
+          "op": "eq",
+          "value": "1"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#moves",
+          "op": "eq",
+          "value": "2"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#delivered",
+          "op": "eq",
+          "value": "1"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "water",
+          "source": "text",
+          "selector": "#water",
+          "coerce": "number"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "moves",
+          "source": "text",
+          "selector": "#moves",
+          "coerce": "number"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "delivered",
+          "source": "text",
+          "selector": "#delivered",
+          "coerce": "number"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "phase",
+          "source": "text",
+          "selector": "#phase"
+        }
+      ]
+    },
+    {
+      "id": "T5",
+      "description": "Exact-four-water delivery on the final move wins before move exhaustion can cause loss",
+      "requirement_ids": [
+        "R2",
+        "R4",
+        "R5",
+        "R9"
+      ],
+      "purpose": "terminal",
+      "evidence": {
+        "spec_quote": "While Playing, Pump adds 3 water capped at 5 and consumes exactly 1 move, even when the tank was already full.",
+        "expected_basis": "Exact-four-water delivery on the final move wins before move exhaustion can cause loss; explicit expected values are checked against the rule arithmetic before any game is generated."
+      },
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#pump"
+        },
+        {
+          "action": "click",
+          "selector": "#deliver"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#water",
+          "op": "eq",
+          "value": "1"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#moves",
+          "op": "eq",
+          "value": "2"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#delivered",
+          "op": "eq",
+          "value": "1"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "click",
+          "selector": "#pump"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#water",
+          "op": "eq",
+          "value": "4"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#moves",
+          "op": "eq",
+          "value": "1"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#delivered",
+          "op": "eq",
+          "value": "1"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "click",
+          "selector": "#deliver"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#water",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#moves",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#delivered",
+          "op": "eq",
+          "value": "2"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Won"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "phase",
+          "source": "text",
+          "selector": "#phase"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "delivered",
+          "source": "text",
+          "selector": "#delivered",
+          "coerce": "number"
+        }
+      ]
+    },
+    {
+      "id": "T6",
+      "description": "Four pumps without a delivery exhaust moves and lose; the third pump is still Playing",
+      "requirement_ids": [
+        "R2",
+        "R5",
+        "R9"
+      ],
+      "purpose": "terminal",
+      "evidence": {
+        "spec_quote": "While Playing, Pump adds 3 water capped at 5 and consumes exactly 1 move, even when the tank was already full.",
+        "expected_basis": "Four pumps without a delivery exhaust moves and lose; the third pump is still Playing; explicit expected values are checked against the rule arithmetic before any game is generated."
+      },
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#pump"
+        },
+        {
+          "action": "click",
+          "selector": "#pump"
+        },
+        {
+          "action": "click",
+          "selector": "#pump"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#water",
+          "op": "eq",
+          "value": "5"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#moves",
+          "op": "eq",
+          "value": "1"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#delivered",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "click",
+          "selector": "#pump"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#water",
+          "op": "eq",
+          "value": "5"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#moves",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#delivered",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Lost"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "water",
+          "source": "text",
+          "selector": "#water",
+          "coerce": "number"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "moves",
+          "source": "text",
+          "selector": "#moves",
+          "coerce": "number"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "delivered",
+          "source": "text",
+          "selector": "#delivered",
+          "coerce": "number"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "phase",
+          "source": "text",
+          "selector": "#phase"
+        }
+      ]
+    },
+    {
+      "id": "T7",
+      "description": "Restart during play after a valid delivery restores every resource",
+      "requirement_ids": [
+        "R7",
+        "R9"
+      ],
+      "purpose": "reset",
+      "evidence": {
+        "spec_quote": "Restart is always enabled and immediately restores all four initial values in every phase, including after an invalid action.",
+        "expected_basis": "Restart during play after a valid delivery restores every resource; explicit expected values are checked against the rule arithmetic before any game is generated."
+      },
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#pump"
+        },
+        {
+          "action": "click",
+          "selector": "#deliver"
+        },
+        {
+          "action": "click",
+          "selector": "#restart"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#water",
+          "op": "eq",
+          "value": "2"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#moves",
+          "op": "eq",
+          "value": "4"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#delivered",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "water",
+          "source": "text",
+          "selector": "#water",
+          "coerce": "number"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "moves",
+          "source": "text",
+          "selector": "#moves",
+          "coerce": "number"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "delivered",
+          "source": "text",
+          "selector": "#delivered",
+          "coerce": "number"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "phase",
+          "source": "text",
+          "selector": "#phase"
+        }
+      ]
+    },
+    {
+      "id": "T8",
+      "description": "Restart from Won restores every resource",
+      "requirement_ids": [
+        "R7",
+        "R9"
+      ],
+      "purpose": "reset",
+      "evidence": {
+        "spec_quote": "Restart is always enabled and immediately restores all four initial values in every phase, including after an invalid action.",
+        "expected_basis": "Restart from Won restores every resource; explicit expected values are checked against the rule arithmetic before any game is generated."
+      },
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#pump"
+        },
+        {
+          "action": "click",
+          "selector": "#deliver"
+        },
+        {
+          "action": "click",
+          "selector": "#pump"
+        },
+        {
+          "action": "click",
+          "selector": "#deliver"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#water",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#moves",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#delivered",
+          "op": "eq",
+          "value": "2"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Won"
+        },
+        {
+          "action": "click",
+          "selector": "#restart"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#water",
+          "op": "eq",
+          "value": "2"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#moves",
+          "op": "eq",
+          "value": "4"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#delivered",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "water",
+          "source": "text",
+          "selector": "#water",
+          "coerce": "number"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "moves",
+          "source": "text",
+          "selector": "#moves",
+          "coerce": "number"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "delivered",
+          "source": "text",
+          "selector": "#delivered",
+          "coerce": "number"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "phase",
+          "source": "text",
+          "selector": "#phase"
+        }
+      ]
+    },
+    {
+      "id": "T9",
+      "description": "Restart from Lost restores every resource",
+      "requirement_ids": [
+        "R7",
+        "R9"
+      ],
+      "purpose": "reset",
+      "evidence": {
+        "spec_quote": "Restart is always enabled and immediately restores all four initial values in every phase, including after an invalid action.",
+        "expected_basis": "Restart from Lost restores every resource; explicit expected values are checked against the rule arithmetic before any game is generated."
+      },
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#pump"
+        },
+        {
+          "action": "click",
+          "selector": "#pump"
+        },
+        {
+          "action": "click",
+          "selector": "#pump"
+        },
+        {
+          "action": "click",
+          "selector": "#pump"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#water",
+          "op": "eq",
+          "value": "5"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#moves",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#delivered",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Lost"
+        },
+        {
+          "action": "click",
+          "selector": "#restart"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#water",
+          "op": "eq",
+          "value": "2"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#moves",
+          "op": "eq",
+          "value": "4"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#delivered",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "water",
+          "source": "text",
+          "selector": "#water",
+          "coerce": "number"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "moves",
+          "source": "text",
+          "selector": "#moves",
+          "coerce": "number"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "delivered",
+          "source": "text",
+          "selector": "#delivered",
+          "coerce": "number"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "phase",
+          "source": "text",
+          "selector": "#phase"
+        }
+      ]
+    },
+    {
+      "id": "T10",
+      "description": "Restart after an invalid action is safe and the next pump behaves normally",
+      "requirement_ids": [
+        "R3",
+        "R7",
+        "R9"
+      ],
+      "purpose": "reset",
+      "evidence": {
+        "spec_quote": "While Playing with water below 4, Deliver is a complete no-op: water, moves, delivered and phase all remain unchanged.",
+        "expected_basis": "Restart after an invalid action is safe and the next pump behaves normally; explicit expected values are checked against the rule arithmetic before any game is generated."
+      },
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#deliver"
+        },
+        {
+          "action": "click",
+          "selector": "#restart"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#water",
+          "op": "eq",
+          "value": "2"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#moves",
+          "op": "eq",
+          "value": "4"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#delivered",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "click",
+          "selector": "#pump"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#water",
+          "op": "eq",
+          "value": "5"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#moves",
+          "op": "eq",
+          "value": "3"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#delivered",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "water",
+          "source": "text",
+          "selector": "#water",
+          "coerce": "number"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "moves",
+          "source": "text",
+          "selector": "#moves",
+          "coerce": "number"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "delivered",
+          "source": "text",
+          "selector": "#delivered",
+          "coerce": "number"
+        },
+        {
+          "action": "assert_consistent",
+          "state_path": "phase",
+          "source": "text",
+          "selector": "#phase"
+        }
+      ]
+    }
+  ],
+  "manual_checks": [
+    {
+      "requirement_id": "R8",
+      "instruction": "M1: On a fresh page inspect readable English instructions and accessible names for Pump, Deliver and Restart. Check all details listed in R8 and that controls are native buttons and the game area is visibly rendered. Record screenshots and accessibility observations; do not infer functional correctness from appearance."
+    },
+    {
+      "requirement_id": "R6",
+      "instruction": "M2: In separate fresh pages reach Won via Pump,Deliver,Pump,Deliver (expect 0,0,2,Won) and Lost via Pump four times (expect 5,0,0,Lost). In each terminal state inspect Pump and Deliver separately: if disabled record that normal activation is unavailable; if enabled activate once and confirm all four visible values remain unchanged, cross-check read-only state. Never force-click disabled controls or inject state. Confirm Restart stays enabled; separate T8/T9 cover its effect. Record each of the four terminal/action combinations separately."
+    }
+  ]
+}
