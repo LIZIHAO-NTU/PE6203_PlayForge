@@ -5,7 +5,7 @@
   "status": "development_handoff_not_frozen",
   "model_api_calls_for_preparation": 0,
   "files": {
-    "docs/D_HANDOFF_INDEX.md": "99c82dc6137f3d78548b7d8b3e79a8e0fa84de40fd6a6620e2e82c6b048ee00a",
+    "docs/D_HANDOFF_INDEX.md": "72559b889e8e85825f5fb8abbc5a65217c0356ae503809b2295569b1bac11f3d",
     "docs/D_HANDOFF_VALIDATION.json": "87e19c2367c5d46b2be7e66a695e44c42298757f3bd48ea5103dd15d0af2abf0",
     "docs/INDEPENDENT_ACCEPTANCE_TEMPLATE.md": "a148479e1ce09da5f560436ec8acb0c9ca5c887cad3a2ded9131df2f07329107",
     "docs/d_reviews/C_REPAIR_RECHECK.md": "1d7fbdbaa279846aa48a3721c33c4cf66b1c677067f72ffd64cc9976a496fd14",
@@ -22,8 +22,8 @@
     "review_only/d_s3/number_lock.md": "ffae3ef23131fc0bc00b96b1eddbff56938067efbe5d1a95060940db46d29629",
     "review_only/d_s3/original_evidence.json": "80b62404d0f8a7d35da88d54c15e5b3af09f33922942586e68fe78373c8f1202",
     "review_only/d_s3/review_expectations.py": "32fefb22f7f85591a4c8c7dccc429a1c3b6a53601076bcea4e8db4d8ad1ce453",
-    "review_only/d_s4/ACCEPTANCE_RECORD.md": "bfcfa649139c3b8f2f7a9c8e8253e032d29a156b65cf1cd100a90025876b7a7b",
-    "review_only/d_s4/README.md": "a13674d9f1110c03e6a969f80b1f6085e320d0260f10dc96458b090694902538",
+    "review_only/d_s4/ACCEPTANCE_RECORD.md": "ebb1e4d3d8597b976788420b12bf802b2db2ff778641c8106ca7bc7db031ab4c",
+    "review_only/d_s4/README.md": "25bb0498a989edcbdfad90616a5547af545385a62cf73eb2d6cf17367c94d7d5",
     "review_only/d_s4/precheck.json": "7a18e27ad853f9948f28702fbeaeacefe8653ca5d9ed859de8cebc3c98678c91",
     "review_only/d_s4/tank_rescue.acceptance.json": "21e4afc3527a7fff5a63197863b5bf27e4164c78af857ef36384d244c1c2b6ee",
     "docs/d_reviews/E_DELIVERY_REVIEW.md": "9a805e507861cd6060d2451eb13c7a5c06e441c4e0891b969f33b200dcecde5a",
@@ -31,6 +31,6 @@
     "docs/d_reviews/e_delivery_tests.log": "0fb079795a7d2441a16ef332a00d6a52121c16a2515f99ae32ddf7c48ad178c7",
     "evals/d_review_e_export.py": "98b3afbb9ef96913a8690cc9abe40ce09a70deb496979ac820636901ecf3dffb"
   },
-  "last_updated": "2026-10-26",
-  "update_note": "Add D independent review of E commit 426710f and update index; original handoff validation remains dated 2026-10-22."
+  "last_updated": "2026-10-27",
+  "update_note": "Link E independent S4 static review at 013727e, update pre-run status; original requirement/acceptance bytes and dated 2026-10-22 validation remain unchanged."
 }
