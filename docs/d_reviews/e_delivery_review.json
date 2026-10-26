@@ -1,0 +1,67 @@
+{
+  "date": "2026-10-26",
+  "reviewer": "D / 513-wys",
+  "reviewed_commit": "426710fbc1cd07c95443f2882575ad0ac9a5a04c",
+  "merge_base": "8eb314555011435cb44a70b79f11044ec63472d0",
+  "source_sha256": {
+    "agent/delivery.py": "de910b91227ff6f310e90a2f56d1802ee935ad5f50351b173282c6b7be4a3cf9",
+    "tests/test_integration.py": "d2ff74b90f1cb715bd6eb823caed277a56f264189b6ef11e2c641ea91cad8cac",
+    "docs/E_DELIVERY_REPRODUCTION.md": "8290f8f0c8916f6bf11b102248e19b1df8475c3942390aa99314c8124bfd9426"
+  },
+  "decision": "No blocking issue in the scoped export-instruction change; broader readiness items remain pending.",
+  "environment": {
+    "python": "3.14.3",
+    "platform": "Darwin",
+    "architecture": "arm64",
+    "playwright": "1.63.0",
+    "dependency_environment": "Existing D project environment reused; source and export directories isolated."
+  },
+  "tests": {
+    "delivery_tests": {
+      "run": 4,
+      "passed": 4,
+      "skipped": 0
+    },
+    "integration_browser_enabled": {
+      "run": 34,
+      "passed": 34,
+      "skipped": 0,
+      "seconds": 11.745
+    },
+    "controlled_export_candidate_checks": {
+      "source_unchanged": true,
+      "game_bytes_match": true,
+      "trace_bytes_match": true,
+      "root_env_excluded": true,
+      "raw_trace_marker_preserved_as_documented": true,
+      "historical_and_exporter_versions_distinguished": true,
+      "no_fabricated_report": true,
+      "course_acceptance_unclaimed": true,
+      "approved_requirement_not_included": true,
+      "explicit_requirement_command": true,
+      "explicit_supply_instruction": true,
+      "old_unshipped_default_command_absent": true,
+      "both_readmes_match": true,
+      "overwrite_and_nested_output_rejected": true,
+      "linked_artifact_rejected": true,
+      "cli_loads_from_export_without_source_pythonpath": true
+    },
+    "baseline_instruction_checks": {
+      "explicit_requirement_command": false,
+      "explicit_supply_instruction": false,
+      "old_unshipped_default_command_absent": false
+    }
+  },
+  "new_real_model_api_calls": 0,
+  "synthetic_fixture": true,
+  "real_game_generation": false,
+  "formal_S1_S5_execution": false,
+  "limitations": [
+    "No clean dependency installation repeated by D; E clean-install results remain attributed to E.",
+    "No bounded real API smoke or model connectivity tested.",
+    "No full repository regression rerun.",
+    "Trace bodies require privacy review before sharing.",
+    "Teacher output layout and post-run packaging permission remain team confirmation items."
+  ],
+  "source_and_artifacts_preserved": true
+}
