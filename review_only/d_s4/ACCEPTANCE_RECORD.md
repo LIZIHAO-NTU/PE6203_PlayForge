@@ -1,6 +1,6 @@
 # S4 Tank Rescue: independent acceptance record draft
 
-Author: D. Independent reviewer/executor: E (pending). Requirement: ../../examples/d_s4/tank_rescue.md. Acceptance: tank_rescue.acceptance.json. Based on the team acceptance template. Expected values were written before generation; none below are observed game results.
+Author: D. Independent reviewer/executor: E (static review complete; execution pending). Requirement: ../../examples/d_s4/tank_rescue.md. Acceptance: tank_rescue.acceptance.json. Based on the team acceptance template. Expected values were written before generation; none below are observed game results.
 
 | Metadata | Value |
 |---|---|
@@ -8,7 +8,7 @@ Author: D. Independent reviewer/executor: E (pending). Requirement: ../../exampl
 | Specification and acceptance | Draft; hashes in precheck.json; rehash if revised |
 | Formal unseen-case eligibility | Pending; prepared before final code freeze |
 | First execution date / unique output directory | Not executed; use a fresh directory |
-| Review decision and date | E to complete |
+| Review decision and date | Static semantics passed in [E report](https://github.com/LIZIHAO-NTU/PE6203_PlayForge/blob/013727e8daf682272777fa80a0852fea793a20f3/docs/E_S4_REVIEW.md); status linked by D on 2026-10-27; game execution pending |
 
 Each automated scenario starts on a separate fresh page and uses normal player buttons. Value order: water / moves / delivered / phase.
 
@@ -40,6 +40,8 @@ E's review should check reachability, fresh-page independence, exact expectation
 | Both self-test and selected independent checks pass | Unconfirmed |
 | API attempts / tokens / elapsed model time for S4 | 0 / 0 / 0 |
 | Evidence / trace completeness / manual development intervention | Pending execution |
-| Remaining work | E review; case eligibility; frozen SHA/configuration; final hashes; actual execution |
+| Remaining work | Team case eligibility; frozen SHA/configuration; final hashes; actual execution by E |
 
 Preserve first results, failures, absent outputs and missing evidence. Save later reruns separately. Passing all automated checks cannot replace manual checks or establish complete game quality.
+
+Independent-review provenance: E report commit 013727e8daf682272777fa80a0852fea793a20f3 reviews D commit a3ed28a1df0e8eb0a8a457d8c2194f85ff64c772. Requirement SHA-256: 8dfafb3b4238bfca8ad6bcc9b159e05ab9254dc5c60bdd90ce84b4312bbc9607; acceptance SHA-256: 21e4afc3527a7fff5a63197863b5bf27e4164c78af857ef36384d244c1c2b6ee. Both original files are unchanged. No game result is inferred from static review.
