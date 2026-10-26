@@ -1,0 +1,963 @@
+{
+  "supported": true,
+  "title": "S3 acceptance draft for D review",
+  "development_plan": [
+    "Check ordinary player transitions"
+  ],
+  "state_contract": {
+    "attempts": "number",
+    "phase": "Playing/Won/Lost",
+    "feedback": "visible feedback"
+  },
+  "requirements": [
+    {
+      "id": "R1",
+      "text": "Initial and typing",
+      "verification": "automated",
+      "priority": "core"
+    },
+    {
+      "id": "R2",
+      "text": "Low and high",
+      "verification": "automated",
+      "priority": "core"
+    },
+    {
+      "id": "R3",
+      "text": "Invalid input",
+      "verification": "automated",
+      "priority": "core"
+    },
+    {
+      "id": "R4",
+      "text": "Third attempt wins",
+      "verification": "automated",
+      "priority": "core"
+    },
+    {
+      "id": "R5",
+      "text": "Loss and terminal lock",
+      "verification": "automated",
+      "priority": "core"
+    },
+    {
+      "id": "R6",
+      "text": "Restart",
+      "verification": "automated",
+      "priority": "core"
+    },
+    {
+      "id": "R7",
+      "text": "Visible English UI and required controls",
+      "verification": "manual",
+      "priority": "secondary"
+    }
+  ],
+  "tests": [
+    {
+      "id": "T1",
+      "description": "Initial and typing",
+      "requirement_ids": [
+        "R1"
+      ],
+      "setup_steps": [],
+      "steps": [
+        {
+          "action": "assert",
+          "source": "value",
+          "selector": "#guess",
+          "op": "eq",
+          "value": ""
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#attempts",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#feedback",
+          "op": "eq",
+          "value": "Ready"
+        },
+        {
+          "action": "fill",
+          "selector": "#guess",
+          "text": "7"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#attempts",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#feedback",
+          "op": "eq",
+          "value": "Ready"
+        }
+      ],
+      "evidence": {
+        "spec_quote": "Only clicking Submit submits; typing alone does not change game state.",
+        "expected_basis": "Initial and typing; initial attempts zero; each valid submission adds one."
+      }
+    },
+    {
+      "id": "T2",
+      "description": "Low and high",
+      "requirement_ids": [
+        "R2"
+      ],
+      "setup_steps": [],
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#guess",
+          "text": "2"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#attempts",
+          "op": "eq",
+          "value": "1"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#feedback",
+          "op": "eq",
+          "value": "Too low"
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "attempts",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "feedback",
+          "op": "eq",
+          "value": "Too low"
+        },
+        {
+          "action": "fill",
+          "selector": "#guess",
+          "text": "9"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#attempts",
+          "op": "eq",
+          "value": "2"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#feedback",
+          "op": "eq",
+          "value": "Too high"
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "attempts",
+          "op": "eq",
+          "value": 2
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "feedback",
+          "op": "eq",
+          "value": "Too high"
+        }
+      ],
+      "evidence": {
+        "spec_quote": "Each valid submission increments attempts exactly once, including the winning submission.",
+        "expected_basis": "Low and high; initial attempts zero; each valid submission adds one."
+      }
+    },
+    {
+      "id": "T3",
+      "description": "Invalid input",
+      "requirement_ids": [
+        "R3"
+      ],
+      "setup_steps": [
+        {
+          "action": "fill",
+          "selector": "#guess",
+          "text": "2"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        }
+      ],
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#guess",
+          "text": "abc"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#attempts",
+          "op": "eq",
+          "value": "1"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#feedback",
+          "op": "eq",
+          "value": "Invalid input"
+        },
+        {
+          "action": "fill",
+          "selector": "#guess",
+          "text": "1.5"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#attempts",
+          "op": "eq",
+          "value": "1"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#feedback",
+          "op": "eq",
+          "value": "Invalid input"
+        },
+        {
+          "action": "fill",
+          "selector": "#guess",
+          "text": "10"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#attempts",
+          "op": "eq",
+          "value": "1"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#feedback",
+          "op": "eq",
+          "value": "Invalid input"
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "attempts",
+          "op": "eq",
+          "value": 1
+        }
+      ],
+      "evidence": {
+        "spec_quote": "During Playing, invalid input sets feedback to Invalid input but leaves attempts and phase unchanged.",
+        "expected_basis": "Invalid input; initial attempts zero; each valid submission adds one."
+      }
+    },
+    {
+      "id": "T4",
+      "description": "Third attempt wins",
+      "requirement_ids": [
+        "R4"
+      ],
+      "setup_steps": [
+        {
+          "action": "fill",
+          "selector": "#guess",
+          "text": "2"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "fill",
+          "selector": "#guess",
+          "text": "9"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        }
+      ],
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#guess",
+          "text": " 7 "
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#attempts",
+          "op": "eq",
+          "value": "3"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Won"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#feedback",
+          "op": "eq",
+          "value": "Correct"
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "attempts",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "phase",
+          "op": "eq",
+          "value": "Won"
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "feedback",
+          "op": "eq",
+          "value": "Correct"
+        }
+      ],
+      "evidence": {
+        "spec_quote": "This takes precedence over exhaustion on the third attempt.",
+        "expected_basis": "Third attempt wins; initial attempts zero; each valid submission adds one."
+      }
+    },
+    {
+      "id": "T5",
+      "description": "Loss and terminal lock",
+      "requirement_ids": [
+        "R5"
+      ],
+      "setup_steps": [
+        {
+          "action": "fill",
+          "selector": "#guess",
+          "text": "1"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "fill",
+          "selector": "#guess",
+          "text": "2"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        }
+      ],
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#guess",
+          "text": "3"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#attempts",
+          "op": "eq",
+          "value": "3"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Lost"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#feedback",
+          "op": "eq",
+          "value": "No attempts left"
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "attempts",
+          "op": "eq",
+          "value": 3
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "phase",
+          "op": "eq",
+          "value": "Lost"
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "feedback",
+          "op": "eq",
+          "value": "No attempts left"
+        }
+      ],
+      "evidence": {
+        "spec_quote": "After Won or Lost, Submit is a no-op (may remain enabled); attempts, phase and feedback stay unchanged.",
+        "expected_basis": "Loss and terminal lock; initial attempts zero; each valid submission adds one."
+      }
+    },
+    {
+      "id": "T6",
+      "description": "Restart",
+      "requirement_ids": [
+        "R6"
+      ],
+      "setup_steps": [
+        {
+          "action": "fill",
+          "selector": "#guess",
+          "text": "7"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        }
+      ],
+      "steps": [
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "attempts",
+          "op": "eq",
+          "value": 1
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "phase",
+          "op": "eq",
+          "value": "Won"
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "feedback",
+          "op": "eq",
+          "value": "Correct"
+        },
+        {
+          "action": "click",
+          "selector": "#restart"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#attempts",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#feedback",
+          "op": "eq",
+          "value": "Ready"
+        },
+        {
+          "action": "assert",
+          "source": "value",
+          "selector": "#guess",
+          "op": "eq",
+          "value": ""
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "attempts",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "feedback",
+          "op": "eq",
+          "value": "Ready"
+        }
+      ],
+      "evidence": {
+        "spec_quote": "Restart is always available and restores attempts=0, phase=Playing, feedback=Ready and clears #guess, including after an invalid input or terminal state.",
+        "expected_basis": "Restart; initial attempts zero; each valid submission adds one."
+      }
+    },
+    {
+      "id": "T7",
+      "description": "Empty and zero input do not spend attempts",
+      "requirement_ids": [
+        "R3"
+      ],
+      "setup_steps": [],
+      "steps": [
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#attempts",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#feedback",
+          "op": "eq",
+          "value": "Invalid input"
+        },
+        {
+          "action": "fill",
+          "selector": "#guess",
+          "text": "0"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#attempts",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#feedback",
+          "op": "eq",
+          "value": "Invalid input"
+        }
+      ],
+      "evidence": {
+        "spec_quote": "Empty input, letters, decimals, multiple digits and out-of-range values are invalid. During Playing, invalid input sets feedback to Invalid input but leaves attempts and phase unchanged.",
+        "expected_basis": "The initial field is empty; both empty and 0 are outside 1..9, so neither consumes a valid attempt."
+      }
+    },
+    {
+      "id": "T8",
+      "description": "Restart after loss resets visible fields and input",
+      "requirement_ids": [
+        "R6"
+      ],
+      "setup_steps": [
+        {
+          "action": "fill",
+          "selector": "#guess",
+          "text": "1"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "fill",
+          "selector": "#guess",
+          "text": "2"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "fill",
+          "selector": "#guess",
+          "text": "3"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        }
+      ],
+      "steps": [
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Lost"
+        },
+        {
+          "action": "click",
+          "selector": "#restart"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#attempts",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#feedback",
+          "op": "eq",
+          "value": "Ready"
+        },
+        {
+          "action": "assert",
+          "source": "value",
+          "selector": "#guess",
+          "op": "eq",
+          "value": ""
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "attempts",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "feedback",
+          "op": "eq",
+          "value": "Ready"
+        }
+      ],
+      "evidence": {
+        "spec_quote": "Restart is always available and restores attempts=0, phase=Playing, feedback=Ready and clears #guess, including after an invalid input or terminal state.",
+        "expected_basis": "Three valid wrong guesses cause Lost; restart must restore all specified initial visible fields."
+      }
+    },
+    {
+      "id": "T9",
+      "description": "Restart after invalid input clears feedback and field",
+      "requirement_ids": [
+        "R6"
+      ],
+      "setup_steps": [
+        {
+          "action": "fill",
+          "selector": "#guess",
+          "text": "abc"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        }
+      ],
+      "steps": [
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#feedback",
+          "op": "eq",
+          "value": "Invalid input"
+        },
+        {
+          "action": "click",
+          "selector": "#restart"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#attempts",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#feedback",
+          "op": "eq",
+          "value": "Ready"
+        },
+        {
+          "action": "assert",
+          "source": "value",
+          "selector": "#guess",
+          "op": "eq",
+          "value": ""
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "attempts",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "feedback",
+          "op": "eq",
+          "value": "Ready"
+        }
+      ],
+      "evidence": {
+        "spec_quote": "Restart is always available and restores attempts=0, phase=Playing, feedback=Ready and clears #guess, including after an invalid input or terminal state.",
+        "expected_basis": "An invalid input changes feedback without spending an attempt; restart restores the initial visible values and clears the field."
+      }
+    },
+    {
+      "id": "T10",
+      "description": "Leading-zero input is invalid",
+      "requirement_ids": [
+        "R3"
+      ],
+      "setup_steps": [],
+      "steps": [
+        {
+          "action": "fill",
+          "selector": "#guess",
+          "text": "07"
+        },
+        {
+          "action": "click",
+          "selector": "#submit"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#attempts",
+          "op": "eq",
+          "value": "0"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert",
+          "source": "text",
+          "selector": "#feedback",
+          "op": "eq",
+          "value": "Invalid input"
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "attempts",
+          "op": "eq",
+          "value": 0
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "phase",
+          "op": "eq",
+          "value": "Playing"
+        },
+        {
+          "action": "assert",
+          "source": "state",
+          "path": "feedback",
+          "op": "eq",
+          "value": "Invalid input"
+        }
+      ],
+      "evidence": {
+        "spec_quote": "Trim surrounding whitespace; a valid submission is exactly one digit from 1 to 9.",
+        "expected_basis": "07 contains two digits, so it is invalid despite its numeric value being seven."
+      }
+    }
+  ],
+  "manual_checks": [
+    {
+      "requirement_id": "R7",
+      "instruction": "On a fresh page, confirm the interface text is English and the visible #guess, #submit, #restart controls and main game region exist. Record screenshot. Treat a full rules paragraph and enhanced accessible names as usability recommendations, not hard failures unless added to the original spec before freeze."
+    },
+    {
+      "requirement_id": "R5",
+      "instruction": "Using normal player actions on separate fresh pages, reach Won with guess 7 and Lost with wrong guesses 1, 2, 3. For each terminal state, if #submit is enabled, attempt another submission and verify attempts, phase and feedback stay unchanged; if #submit is disabled, verify it cannot be activated by normal player input and the displayed state remains unchanged. The input may also be disabled. Record which permitted behavior was observed and preserve separate evidence for Won and Lost."
+    },
+    {
+      "requirement_id": "R1",
+      "instruction": "On a fresh page, focus #guess, type 2, press Enter without clicking Submit, and verify attempts=0, phase=Playing, feedback=Ready. Then click Submit and verify 1/Playing/Too low. Record visible values and read-only state. This manual check covers the no-Enter-submission rule."
+    }
+  ]
+}

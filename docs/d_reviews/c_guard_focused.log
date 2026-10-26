@@ -1,0 +1,19 @@
+test_runner_stops_before_editing_for_conflicting_frozen_checks (test_c_repair_guard.CRepairBrowserTests.test_runner_stops_before_editing_for_conflicting_frozen_checks) ... [1/4] Checking local browser; no API credits used yet...
+[2/4] Planning requirements and frozen acceptance tests...
+[3/4] Generation / repair 1/3...
+      Running browser smoke + interaction tests...
+[4/4] plan_review_required
+Results: /private/var/folders/j3/47bfjstj4l1d72l7xp227r3w0000gn/T/tmpvvn86_83/run
+Play: python -m agent serve "/private/var/folders/j3/47bfjstj4l1d72l7xp227r3w0000gn/T/tmpvvn86_83/run/game"
+ok
+test_adjacent_state_display_conflict_pauses_even_when_second_assertion_fails (test_c_repair_guard.CRepairGuardTests.test_adjacent_state_display_conflict_pauses_even_when_second_assertion_fails) ... ok
+test_cross_test_text_3_and_3_point_0_is_a_conflict (test_c_repair_guard.CRepairGuardTests.test_cross_test_text_3_and_3_point_0_is_a_conflict) ... ok
+test_distinct_action_sequences_do_not_create_false_conflict (test_c_repair_guard.CRepairGuardTests.test_distinct_action_sequences_do_not_create_false_conflict) ... ok
+test_missing_failed_step_observation_is_not_invented (test_c_repair_guard.CRepairGuardTests.test_missing_failed_step_observation_is_not_invented) ... ok
+test_numeric_state_3_and_3_point_0_is_equivalent (test_c_repair_guard.CRepairGuardTests.test_numeric_state_3_and_3_point_0_is_equivalent) ... ok
+test_string_state_3_and_3_point_0_is_a_conflict (test_c_repair_guard.CRepairGuardTests.test_string_state_3_and_3_point_0_is_a_conflict) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 2.231s
+
+OK
