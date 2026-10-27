@@ -1,4 +1,4 @@
-# Minimal Brick Breaker / 打砖块
+# Minimal Brick Breaker
 Create a vanilla offline HTML/CSS/JS game with a visible 480x360 2D Canvas.
 Prioritize correct continuous movement, collision and reset logic over visual effects.
 

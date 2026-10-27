@@ -489,47 +489,47 @@ def run(config, spec_path, output, max_rounds=3, max_calls=8, max_seconds=600,
 
 def write_report(output, summary):
     usage = summary["usage"]
-    lines = ["# PlayForge — 自动开发运行报告", "", f"- 状态：`{summary['status']}`",
-             f"- 模型：`{summary['model']}`", f"- 耗时：{summary['duration_seconds']} 秒",
-             f"- API 尝试次数：{usage['api_attempts']}",
-             f"- 已知输入 / 输出 token：{usage['prompt_tokens']} / {usage['completion_tokens']}",
-             f"- 用量未知的调用次数：{usage['calls_with_unknown_usage']}",
-             f"- 已知用量估算费用：{usage['estimated_known_usage_cost']} {usage['currency']}", "",
-             "自动通过不等于完整验收；None 表示未测量或未配置价格，不是零。", "",
-             "## 需求与自动检查", ""]
+    lines = ["# PlayForge — Autonomous Development Run Report", "", f"- Status: `{summary['status']}`",
+             f"- Model: `{summary['model']}`", f"- Duration: {summary['duration_seconds']} seconds",
+             f"- API attempts: {usage['api_attempts']}",
+             f"- Known input / output tokens: {usage['prompt_tokens']} / {usage['completion_tokens']}",
+             f"- Calls with unknown usage: {usage['calls_with_unknown_usage']}",
+             f"- Estimated cost of known usage: {usage['estimated_known_usage_cost']} {usage['currency']}", "",
+             "An automatic pass is not full acceptance; None means unmeasured or prices not configured, not zero.", "",
+             "## Requirements and Automatic Checks", ""]
     for item in summary.get("requirements", []):
         lines.append(f"- {item['id']} [{item['status']}] {item['text']}")
-    lines += ["", "## 测试诊断与计划提醒", "",
-              f"- Agent 版本：{summary.get('agent_version', 'unknown')}",
-              f"- 停止原因：{summary.get('stop_reason')}",
-              f"- 规划状态：{summary.get('planning_status')}",
-              f"- 冻结前模型审查：{summary.get('plan_audit_status', 'not_requested')}",
-              f"- 功能规划恢复成功：{summary.get('planning_recovered', False)}",
-              f"- 完成门禁：{json.dumps(summary.get('quality_gate'), ensure_ascii=False)}",
-              f"- 玩法分析：{json.dumps(summary.get('gameplay'), ensure_ascii=False)}",
-              f"- 自动需求通过比例：{summary.get('automated_requirement_pass_rate')}",
-              f"- 失败分类：{json.dumps(summary.get('failure_summary', {}).get('counts', {}), ensure_ascii=False)}",
-              f"- 建议复核的测试：{summary.get('failure_summary', {}).get('review_test_ids', [])}", "",
-              "目标超时、断言不符不直接证明游戏代码错误，也可能是操作策略或测试计划问题。失败不会因此自动算通过。"]
+    lines += ["", "## Test Diagnostics and Plan Warnings", "",
+              f"- Agent version: {summary.get('agent_version', 'unknown')}",
+              f"- Stop reason: {summary.get('stop_reason')}",
+              f"- Planning status: {summary.get('planning_status')}",
+              f"- Pre-freeze model audit: {summary.get('plan_audit_status', 'not_requested')}",
+              f"- Functional planning recovered: {summary.get('planning_recovered', False)}",
+              f"- Completion gate: {json.dumps(summary.get('quality_gate'), ensure_ascii=False)}",
+              f"- Gameplay analysis: {json.dumps(summary.get('gameplay'), ensure_ascii=False)}",
+              f"- Automated requirement pass rate: {summary.get('automated_requirement_pass_rate')}",
+              f"- Failure categories: {json.dumps(summary.get('failure_summary', {}).get('counts', {}), ensure_ascii=False)}",
+              f"- Tests suggested for review: {summary.get('failure_summary', {}).get('review_test_ids', [])}", "",
+              "Goal timeouts and assertion mismatches do not directly prove a game-code defect; interaction strategy or the test plan may be responsible. Failures do not automatically become passes."]
     if summary.get("planning_status") == "failed_startup_only":
-        lines += ["", "规划未通过；当前只检查启动，不声称原始功能已验收。",
-                  "规划错误：" + str(summary.get("planning_error", ""))]
+        lines += ["", "Planning failed; only startup is checked, with no claim that the original functionality was accepted.",
+                  "Planning error: " + str(summary.get("planning_error", ""))]
     for warning in summary.get("plan_warnings", []):
         lines.append(f"- {warning['test_id']}: {warning['message']}")
     for warning in summary.get("plan_quality", {}).get("warnings", []):
-        lines.append(f"- 计划质量提醒 {warning['test_id']}: {warning['message']}")
+        lines.append(f"- Plan quality warning {warning['test_id']}: {warning['message']}")
     for warning in summary.get("plan_review", {}).get("warnings", []):
-        lines.append(f"- 测试计划复核 {warning['test_id']}: {warning['message']}")
-    lines += ["", "## 人工试玩待办", "", "- [ ] 根据原始需求完整试玩，检查自动测试遗漏和状态钩子的真实性。"]
+        lines.append(f"- Test plan review {warning['test_id']}: {warning['message']}")
+    lines += ["", "## Pending Manual Playtesting", "", "- [ ] Play the complete game against the original requirement; check automatic-test omissions and state-hook fidelity."]
     for check in summary.get("manual_checks", []):
         lines.append(f"- [ ] {check['requirement_id']}: {check['instruction']}")
     if summary.get("error"):
-        lines += ["", "## 未完成或错误", "", summary["error"]]
+        lines += ["", "## Incomplete Work or Errors", "", summary["error"]]
     if (output / "game" / "index.html").is_file():
-        lines += ["", "## 启动游戏", "", "在 PlayForge 项目目录运行：", "", "```powershell",
+        lines += ["", "## Start the Game", "", "Run from the PlayForge project directory:", "", "```powershell",
                   f'python -m agent serve "{output.resolve() / "game"}"', "```"]
     else:
-        lines += ["", "本次未生成可启动游戏；请先查看上述停止原因及 traces/ 中的计划／审查记录。"]
-    lines += ["", "原始需求、已保存的计划、API 用量及可用的执行证据位于 traces/。", "",
-              "计价依赖用户配置；失败/超时请求也可能计费，以服务商账单为准。"]
+        lines += ["", "No launchable game was generated; first inspect the stop reason above and the plan/review records in traces/."]
+    lines += ["", "The original requirement, saved plans, API usage and available execution evidence are in traces/.", "",
+              "Pricing depends on user configuration; failed/timed-out requests may also be billed. Provider billing is authoritative."]
     (output / "REPORT.md").write_text("\n".join(lines) + "\n", encoding="utf-8")

@@ -1,4 +1,4 @@
-# Last Stone Loses / 取走最后一颗者输
+# Last Stone Loses
 Create an offline vanilla HTML/CSS/JS game for TWO LOCAL players A and B, no AI or networking.
 Initial stones=5, current player=A, winner unset, phase=Playing.
 - #take1 / #take2 remove exactly 1 / 2 stones if that many remain and phase=Playing.

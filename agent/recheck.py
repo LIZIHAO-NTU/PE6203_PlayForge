@@ -49,14 +49,14 @@ def recheck(game, plan_path, output, timeout=60, headful=False, verifier=verify,
               "plan_review": inspect_plan(plan),
               "requirements": requirement_results(plan, result), "verification": result}
     (output / "recheck.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-    lines = ["# PlayForge — 独立复测报告", "", "本次不调用模型、不改写游戏，不替代原始自主开发成绩。", "",
-             f"- Agent：{__version__}", f"- 自动检查全部通过：{report['automated_checks_passed']}",
-             f"- 用时：{report['duration_seconds']} 秒", "- API 调用：0", "",
-             "## 需求结果", ""]
+    lines = ["# PlayForge — Independent Recheck Report", "", "This recheck makes no model calls, does not modify the game, and does not replace the original autonomous-development score.", "",
+             f"- Agent: {__version__}", f"- All automatic checks passed: {report['automated_checks_passed']}",
+             f"- Duration: {report['duration_seconds']} seconds", "- API calls: 0", "",
+             "## Requirement Results", ""]
     for req in report["requirements"]:
         lines.append(f"- {req['id']} [{req['status']}] {req['text']}")
-    lines += ["", "## 诊断", "", json.dumps(report["failure_summary"], ensure_ascii=False, indent=2), "",
-              "截图与逐步观察保存在 evidence/ 和 recheck.json。游戏状态接口仍需人工核对真实性。",
-              "更换测试计划后的复测通过，不代表原来那次运行自主成功；不要混入 summarize 的成功率。"]
+    lines += ["", "## Diagnostics", "", json.dumps(report["failure_summary"], ensure_ascii=False, indent=2), "",
+              "Screenshots and step-by-step observations are in evidence/ and recheck.json. Game-state interface fidelity still needs manual review.",
+              "Passing a recheck with a different test plan does not establish that the original run succeeded autonomously; do not mix it into summarize success rates."]
     (output / "REPORT.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     return 0 if result.get("ok") else 2

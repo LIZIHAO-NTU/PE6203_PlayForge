@@ -1,4 +1,4 @@
-# Two-player Tic-Tac-Toe / 双人井字棋
+# Two-player Tic-Tac-Toe
 Create a small offline browser game from an empty directory using vanilla HTML/CSS/JS.
 Prioritize correct rules and reliable startup over artwork. No backend, dependencies or AI opponent.
 

@@ -1,13 +1,13 @@
-# 卡片配对
+# Memory Pairs
 
-用原生 HTML/CSS/JavaScript 制作离线单人网页记忆配对游戏。
-无第三方库、外部图片、网络和构建步骤。
+Create an offline single-player browser memory-pairing game with vanilla HTML/CSS/JavaScript.
+Do not use third-party libraries, external images, networking or build steps.
 
-- 4 × 4 张卡片，8 对符号，初始背面朝上，位置随机打乱。
-- 点击翻开卡片；每回合最多两张未配对卡片。
-- 两张相同则保持正面；不同则短暂显示后翻回。
-- 显示尝试次数，每翻开第二张有效卡片增加一次。
-- 已配对卡片和同一张卡片不能被重复计入尝试。
-- 所有卡片配对后显示胜利。
-- 提供“重新开始”，清空尝试次数并重置所有卡片。
-- 使用文字或 Unicode 符号画卡片，操作清楚，布局可读。
+- A 4 × 4 grid contains 8 pairs of symbols, initially face down and randomly shuffled.
+- Click to flip a card; at most two unmatched cards may be revealed per turn.
+- Matching cards stay face up. Nonmatching cards remain visible briefly, then flip back.
+- Display attempts; increment once whenever the second valid card is revealed.
+- Matched cards and repeated clicks on the same card must not count again.
+- Show victory after all cards are matched.
+- Provide “Restart” to clear attempts and reset all cards.
+- Draw cards with text or Unicode symbols; make controls clear and the layout readable.

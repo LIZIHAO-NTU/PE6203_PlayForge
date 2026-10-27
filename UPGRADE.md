@@ -1,75 +1,75 @@
-# PlayForge — MVP 0.2：观察式验收与独立复测
+# PlayForge — MVP 0.2: Observation-Based Acceptance and Independent Rechecks
 
-> 本文是 0.2 的历史记录，保留当时的功能与测试结果。当前版本为 1.0 Beta 3（`1.0.0-beta.3`），安装使用见 [README.md](README.md)，最新规划改进见 [PLANNING.md](PLANNING.md)，此前能力筛查见 [CAPABILITY.md](CAPABILITY.md)，整合基线见 [INTEGRATION.md](INTEGRATION.md)；0.3 历史实测见 [GENERALIZATION.md](GENERALIZATION.md)。
+> This is the historical 0.2 record, preserving its features and test results. The version current when this note was maintained was 1.0 Beta 3 (`1.0.0-beta.3`). For installation/use, see [README.md](README.md); planning changes: [PLANNING.md](PLANNING.md); prior screening: [CAPABILITY.md](CAPABILITY.md); integrated baseline: [INTEGRATION.md](INTEGRATION.md); historical 0.3 trials: [GENERALIZATION.md](GENERALIZATION.md).
 
-本次是在原有 MVP 上适度扩展，重点提高测试可信度和失败诊断能力。保留 DeepSeek 接入、原有配置和启动方式，不增加复杂 UI、多 Agent 或游戏引擎。
+This is a moderate extension of the original MVP focused on trustworthy testing and failure diagnosis. It retains the DeepSeek connection, existing configuration and startup method, without adding a complex UI, multi-agent system or game engine.
 
-## 1 为什么优先升级这里
+## 1. Why prioritize this upgrade?
 
-第一次真实试跑中，部分测试按固定时间移动，然后直接检查分数或胜利，但玩家没有实际到达目标。盲目把这类失败交给模型修复，可能浪费调用，也可能让模型为了测试修改原本合理的游戏。
+In the first real trial, some tests moved for a fixed time and then checked score or victory even though the player had not reached the target. Blindly asking the model to repair those failures could waste calls or make it modify an otherwise reasonable game to satisfy the test.
 
-新版允许测试根据当前状态持续操作，达到明确目标后再断言。例如，通过真实方向键追踪当前星星，分数达到 10 才结束第一段操作；随后重新读取星星位置，继续验证 20 分和 30 分。
+The upgrade lets tests act on current observations and assert only after an explicit goal. For example, use real arrow keys to follow the current star until the score reaches 10, reread the star position, then continue checking 20 and 30 points.
 
-## 2 具体扩展
+## 2. Specific extensions
 
-| 扩展 | 用途 | 边界 |
+| Extension | Purpose | Boundary |
 |---|---|---|
-| `wait_until` | 等待某个真实状态或界面条件出现 | 有超时，不无限等待 |
-| `key_until` | 通过正常按键推进，直到观察条件满足 | 不修改游戏内部状态 |
-| `move_to` | 读取角色与目标坐标，选择方向键跟随 | 仅适合无障碍俯视二维移动；不支持寻路/平台跳跃 |
-| `surface` 断言 | 直接检查实际 canvas/DOM 尺寸 | 不能证明碰撞或渲染内容都正确 |
-| 失败分类 | 区分目标超时、断言不符、状态接口、交互、运行时错误 | 分类是现象，不是确定根因 |
-| 计划风险提醒 | 标记固定时间移动后检查得分/胜利的潜在误报 | 启发式提醒，不会自动改测试 |
-| `recheck` 命令 | 对保存的游戏独立复测，零 API 调用 | 不修复游戏，不改写原始自主开发成绩 |
-| 报告增强 | 记录 Agent 版本、自动需求通过比例、失败分类、计划提醒 | 自动需求通过比例不等于完整游戏成功率 |
+| `wait_until` | Wait for a real state/UI condition | Bounded timeout, never infinite waiting |
+| `key_until` | Use normal keys until an observed condition holds | No internal-state mutation |
+| `move_to` | Read actor/target coordinates and follow with directional keys | Unobstructed top-down 2D movement only; no pathfinding/platforming |
+| `surface` assertions | Check actual canvas/DOM dimensions | Does not prove collision or rendered-content correctness |
+| Failure categories | Distinguish goal timeouts, assertion mismatches, state-interface, interaction and runtime errors | Categories describe observations, not proven root causes |
+| Plan-risk warnings | Flag potential false failures from fixed-duration movement followed by score/victory checks | Heuristics, not automatic test edits |
+| `recheck` command | Independently retest a saved game with zero API calls | No game repair or rewrite of original autonomous-development scores |
+| Reporting | Record Agent version, automated requirement-pass proportions, failure categories and plan warnings | Requirement-pass proportions are not complete game success rates |
 
-规划提示词同时修正了示例中人工检查引用不存在需求的问题，并要求避免凭空增加 Start 按钮、固定时长碰撞假设和错误的画布尺寸测试。修复提示词要求先审视操作轨迹和原始需求，不能伪造状态或降低验收标准。
+Planning prompts also correct a manual-check example that referenced a nonexistent requirement and discourage invented Start buttons, fixed-time collision assumptions and incorrect canvas-size checks. Repair prompts require inspecting the actual action trajectory and original requirement first; fake state and weakened acceptance are prohibited.
 
-每个目标动作最多 8 秒，整份计划的显式等待与目标预算最多 45 秒，浏览器进程仍有整体超时。失败保持失败，模型不能修改运行中的固定验收计划。
+Each goal action is limited to 8 seconds; explicit waits and goal budgets across the plan are limited to 45 seconds, with an overall browser-process timeout as well. Failures remain failures, and the model cannot modify the fixed acceptance plan during execution.
 
-## 3 如何使用
+## 3. Usage
 
-### 从零生成新游戏（会调用配置的 API）
+### Generate a new game from scratch (uses the configured API)
 
-在项目目录运行，沿用已有 Python 环境和 `.env`：
+Run from the project directory with your existing Python environment and `.env`:
 
 ```powershell
 python -m agent game_design_prompt.md --max-rounds 2 --max-calls 5 --max-seconds 360
 ```
 
-如果你使用虚拟环境，把 `python` 替换为 `.venv\Scripts\python.exe`。新版动作已经写入规划提示词，由模型按实际需求选择；不是所有游戏都应使用 `move_to`。不适合自动验证的部分仍应留下人工检查项。
+For a virtual environment, replace `python` with `.venv\Scripts\python.exe`. The new actions are in the planning prompt for the model to select as appropriate; not every game should use `move_to`. Leave manual checks for aspects unsuitable for automatic verification.
 
-### 复测此前保存的示例（不调用 API）
+### Recheck a previously saved example (no API calls)
 
 ```powershell
 python -m agent recheck runs/live_test_20261009_01/game --plan examples/collector_acceptance.json
 ```
 
-输出位于新的 `rechecks/` 子目录。可追加 `--headful` 查看过程，或用 `--output` 指定一个尚不存在的输出目录。
+Outputs go into a new `rechecks/` subdirectory. Add `--headful` to watch, or `--output` for a new, nonexistent output directory.
 
-`collector_acceptance.json` 是基于已有示例的观察字段和控件编写的回归计划，仅用于独立验收。它不会作为游戏模板传给模型，也不能直接拿去验收所有未知游戏。其他游戏可以先使用其自己的 `traces/plan.json`，但旧计划的缺陷不会自动消失。
+`collector_acceptance.json` is a regression plan written against the existing example's observation fields and controls, for independent acceptance only. It is not a game template supplied to the model and cannot verify every unseen game unchanged. Other games may first use their own `traces/plan.json`, but existing plan defects do not disappear automatically.
 
-## 4 本次验证结果
+## 4. Validation results
 
-验证日期：2026-10-09。环境：Windows、Python 3.11、Playwright、本机 Edge。
+Validation date: 2026-10-09. Environment: Windows, Python 3.11, Playwright and locally installed Edge.
 
-- **54/54 项框架测试通过**，总用时 33.027 秒。模型响应均为模拟，不连接真实模型服务；包含真实浏览器交互、修复循环、超时回收和安全约束回归。
-- 对已有收集星星游戏完成 **7/7 项独立检查**，耗时 **18.343 秒**。包含实际画布尺寸、初始布局、横纵移动、得分与星星变化、三次收集与胜利停止、暂停恢复、暂停后重开和获胜后重开。
-- 此次独立复测执行了 11 段观察式目标操作，全部通过正常键盘事件完成，没有传送角色、设置分数或修改游戏代码。
-- 外观、完整方块边缘约束、平滑性和状态观察接口真实性仍保留人工核对项。
-- 本次没有调用 DeepSeek API，没有修改 `.env`、原游戏、旧计划或历史成绩。
+- **54/54 framework tests passed**, 33.027 seconds total. Model responses were simulated, with no real model-service connection. Coverage includes real-browser interaction, repair loops, timeout cleanup and safety constraints.
+- **7/7 independent checks** on the existing star-collector game passed in **18.343 seconds**. Coverage includes actual canvas size, initial layout, horizontal/vertical movement, scoring and star relocation, three collections and victory lock, pause/resume, restart while paused and restart after victory.
+- Independent rechecks executed 11 observation-driven goal operations through normal keyboard events, without teleporting the actor, setting scores or changing game code.
+- Appearance, full-square boundary containment, smoothness and state-interface fidelity remain manual checks.
+- No DeepSeek API calls were made; `.env`, the original game, old plan and historical results were unchanged.
 
-这些结果证明新增工具可以工作，不证明新版 Agent 对未知游戏的成功率已经提高。下一步应使用不同需求、重复的真实模型运行评估，分别记录模型、提示词哈希、Agent 版本与预算，不要把独立复测和自主开发成绩混算。
+These results show the new tools work, not that the upgraded Agent's unseen-game success rate improved. Next, evaluate different requirements and repeated real-model runs, recording model, prompt hash, Agent version and budgets separately. Do not combine independent recheck results with autonomous-development scores.
 
-本次浏览器截图与调试输出属于临时验证材料，已清理；保留可重现的代码、测试和验收计划。需要查看证据时，可再次运行上述零 API 复测命令生成。
+Browser screenshots and debugging output from this round were temporary validation materials and were removed. Reproducible code, tests and the acceptance plan remain; rerun the zero-API command above to regenerate evidence.
 
-## 5 保留的交付内容
+## 5. Retained deliverables
 
-项目原文件保留，更新核心代码、版本、提示词、汇总字段、README 和忽略规则。新增：
+Existing project files remain, with updates to core code, version, prompts, summary fields, README and ignore rules. Additions:
 
-- `agent/recheck.py`：独立复测入口。
-- `tests/test_upgrade.py`：新增功能的自动回归测试。
-- `examples/collector_acceptance.json`：当前示例的独立验收计划。
-- `UPGRADE.md`：本升级说明。
+- `agent/recheck.py`: independent recheck entry point.
+- `tests/test_upgrade.py`: automatic regressions for the additions.
+- `examples/collector_acceptance.json`: the existing example's independent acceptance plan.
+- `UPGRADE.md`: this upgrade note.
 
-当前仍是离线二维网页游戏原型，不是完整课程交付系统，也不是经过安全审计的执行沙箱。
+This remains an offline 2D browser-game prototype, not a complete course-delivery system or security-audited execution sandbox.

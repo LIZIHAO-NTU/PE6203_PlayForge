@@ -1,65 +1,65 @@
-# A：控制层停止与产物一致性验证
+# A: Controller Stop Conditions and Artifact Consistency
 
-日期：2026-10-22。作者职责：A；独立主审：E，**尚待复核**。
+Date: 2026-10-22. Author role: A; independent primary reviewer: E, **review pending**.
 
-发布方式：独立 A 分支/PR，不直接合并 main。结果索引记录的是原始验证时的基线与本地新增测试状态；后续提交和推送不追溯改写这份历史记录，最新发布/合并状态以 GitHub 为准。
+Publication: a separate A branch/PR, without a direct merge into main. The result index records the baseline and locally added tests at the original validation time. Later commits and pushes do not retroactively rewrite that historical record; consult GitHub for the latest publication/merge status.
 
-## 1. 问题、基线和范围
+## 1. Question, baseline and scope
 
-预算耗尽、用户中断、后续版本退化或测试冲突出现时，控制程序应保留可用证据与较好版本，不能把停止或启动成功报告为完整游戏验收成功。
+When the budget is exhausted, the user interrupts, a later candidate regresses or a test conflict appears, the controller should preserve usable evidence and the better version. A stop or successful startup must not be reported as full game acceptance.
 
-基线为 GitHub main `8eb314555011435cb44a70b79f11044ec63472d0`。本轮在该基线上增加 `tests/test_controller_consistency.py` 和文档，不修改 `agent/`、提示词、模型配置、课程验收答案或 B/C/D/E 的实现，不新增游戏生成模板。
+The baseline is GitHub main `8eb314555011435cb44a70b79f11044ec63472d0`. This round adds `tests/test_controller_consistency.py` and documentation without modifying `agent/`, prompts, model configuration, course acceptance answers or B/C/D/E's implementations, and without adding game-generation templates.
 
-本轮未发现所测边界需要修复生产代码的缺陷，因此交付是**可复现边界测试与验证结论**，不是宣称新增了预算控制、回滚或日志系统。
+No defect requiring a production-code fix was found within the tested boundaries. The deliverable is therefore **reproducible boundary tests and validation findings**, rather than a claim to have added budget control, rollback or logging.
 
-## 2. 控制流程和检查入口
+## 2. Control flow and inspection points
 
 ```text
-原始 Markdown → 固定计划 → 生成候选 → 可信工具验证
-                                      ↓
-                      记录失败、比较候选、选择较好版本
-                                      ↓
-                    继续有限修复，或因预算/异常/复核停止
-                                      ↓
-                  保留 game/、summary.json、traces/state.json
+Original Markdown → Fixed plan → Generate candidate → Trusted tool verification
+                                                           ↓
+                                  Record failures, compare and select candidates
+                                                           ↓
+                               Continue bounded repair, or stop for budget/error/review
+                                                           ↓
+                                 Preserve game/, summary.json, traces/state.json
 ```
 
-- `agent/runner.py`：预算、循环、选择与停止、最终输出。
-- `agent/state.py`：本次运行的修复记录与基准轮次。
-- `agent/artifacts.py`：本地资源引用与可选语法检查，不证明游戏规则。
-- `agent/diagnostics.py`：C 的失败路由，本轮只检验与 runner 的接口衔接。
+- `agent/runner.py`: budgets, loop, selection, stopping and final outputs.
+- `agent/state.py`: repair history and base round within this run.
+- `agent/artifacts.py`: local-resource references and optional syntax checks; not proof of gameplay rules.
+- `agent/diagnostics.py`: C's failure routing; this round checks only its integration with the runner.
 
-关键检查：在验证开始前记录候选源码指纹，最终 `game/`、被选候选与原源码指纹一致；`selected_round` 与 checkpoint 的 `repair_base_round` 对应；正常停止时计划文件哈希与摘要及 checkpoint 一致；两份 summary 一致；失败状态不误报自动成功；所有场景的 `full_game_acceptance` 保持未知。
+Key checks: fingerprint the candidate source before verification; the final `game/`, selected candidate and original fingerprint must agree. `selected_round` must correspond to the checkpoint's `repair_base_round`. On normal stops, the plan-file hash must match the summary and checkpoint. Both summaries must agree. Failure states must not claim automatic success, and `full_game_acceptance` must remain unknown in every scenario.
 
-## 3. 九项测试
+## 3. Nine tests
 
-| 编号 | 场景 | 控制层应给出的结果 | 方法 |
+| ID | Scenario | Required controller result | Method |
 |---|---|---|---|
-| A1 | 第一轮已验证失败，下一次请求遭调用预算拒绝 | `budget_exhausted`；退出码 4；保留已验证候选；不成功 | 脚本化响应和预算守卫 |
-| A2 | 第一轮验证后已到时间上限 | 不发第二次代码请求；保留候选；剩余时间为 0 | 可控虚拟单调时钟，不靠真实等待 |
-| A3 | 第二轮修复请求中断 | `interrupted`；退出码 130；保留第一轮候选 | 注入 `KeyboardInterrupt` |
-| A4 | 第一轮验证尚无结论就中断 | 保留源码但标 `preserved_unverified_candidate`；不伪造选中轮次或通过 | 验证器替身注入中断 |
-| A5 | 新版本分数相同，但丢失原已通过项 | 不以第二轮替换第一轮；记录退化的测试 ID | 两轮可控结果，不是玩法真值判定 |
-| A6 | 验证期间故意改写固定计划 | 检测后 `run_error`、退出码 4，不报告成功 | 受控篡改副本；不接触已有运行 |
-| A7 | 功能计划无效，启动后恢复又失败 | `partial_game_plan_failed`；恢复仅尝试一次；启动不升级为功能成功 | 脚本化无效计划及 ProviderError |
-| A8 | 所选自测通过 | `automated_passed_manual_pending`；退出码 0；完整游戏验收仍未知 | 成功对照 |
-| A9 | C 路由检出固定测试冲突 | 真实浏览器完成首轮后停止；不调用第二轮代码；保留游戏与计划 | 真实 Edge；脚本化模型响应 |
+| A1 | Round one has a verified failure; the next request is rejected by the call budget | `budget_exhausted`; exit 4; preserve the verified candidate; no success | Scripted responses and budget guard |
+| A2 | Time limit reached after first-round verification | No second code request; preserve candidate; zero remaining time | Controlled virtual monotonic clock, without real waiting |
+| A3 | Interrupt during the second-round repair request | `interrupted`; exit 130; preserve the first-round candidate | Inject `KeyboardInterrupt` |
+| A4 | Interrupt before first-round verification produces a conclusion | Preserve source as `preserved_unverified_candidate`; do not invent a selected round or pass | Verifier substitute injects an interruption |
+| A5 | New candidate has the same score but loses a previously passed check | Keep round one rather than replacing it with round two; record regressed test IDs | Two controlled outcomes, not a gameplay oracle |
+| A6 | Deliberately rewrite the fixed plan during verification | Detect the change; `run_error`, exit 4; no success | Controlled tampering with a copy; existing runs untouched |
+| A7 | Invalid functional plan followed by failed recovery after startup | `partial_game_plan_failed`; only one recovery attempt; startup does not become functional success | Scripted invalid plans and ProviderError |
+| A8 | Selected self-tests pass | `automated_passed_manual_pending`; exit 0; full game acceptance still unknown | Successful control case |
+| A9 | C's routing detects a fixed-test conflict | Stop after the first round in a real browser; no second code call; preserve game and plan | Real Edge; scripted model responses |
 
-A6 的边界：这里验证的是**检测改写并拒绝成功**。控制程序不会自动恢复被改写的计划文件；被篡改文件与原哈希的差异明确保留。此测试不是防恶意进程的安全保证，也不能被概括为“所有情况下计划文件都未变化”。
+A6's boundary: it verifies **detection of a rewrite and refusal to claim success**. The controller does not automatically restore the modified plan. The changed file and discrepancy from its original hash remain explicit. This is not a security guarantee against malicious processes and does not establish that plan files remain unchanged in every circumstance.
 
-## 4. 结果与来源
+## 4. Results and sources
 
-- 初始零 API 定向运行：9 项发现，8 项通过，1 项浏览器检查按默认设置跳过。
-- 启用真实浏览器后，定向测试：**9/9 通过，零跳过**。
-- 最终测试版本的全量浏览器回归：**343/343 通过，零跳过**，约 190.925 秒；定向运行约 5.205 秒。执行结果和源码指纹见 [a_controller_consistency_results.json](a_controller_consistency_results.json)。
-- 本机：Windows、Python 3.11.9；Playwright 1.63.0；Edge 通道 `msedge`。精确版本记录在结果索引。
-- 真实模型请求：**0**。ScriptedClient 使用测试用配置并显式拦截 provider 请求；全量回归保留 localhost HTTP 测试、阻断未模拟的外部模型请求。
+- Initial zero-API focused run: 9 discovered, 8 passed, 1 browser check skipped by default.
+- With a real browser enabled: focused tests **9/9 passed, zero skips**.
+- Full browser regression on the final test version: **343/343 passed, zero skips**, approximately 190.925 seconds; focused run approximately 5.205 seconds. See [a_controller_consistency_results.json](a_controller_consistency_results.json) for results and source fingerprints.
+- Local environment: Windows, Python 3.11.9, Playwright 1.63.0 and Edge channel `msedge`. Exact versions are in the result index.
+- Real model requests: **0**. ScriptedClient uses test configuration and explicitly blocks provider requests. The full regression allows localhost HTTP tests and blocks unmocked external model requests.
 
-这里的脚本化请求数用于验证控制预算，不是 API 消费数。实际浏览器也只验证测试夹具的集成行为，不增加真实模型生成样本。
+Scripted request counts test budget control; they are not API charges. Real-browser execution verifies fixture integration and does not add real-model generation samples.
 
-## 5. E 如何独立复核
+## 5. E's independent review
 
-先取得包含本轮新增测试的实际工作树或后续 PR，不能只在原 main 上运行后误称复核了本轮改动。按 README 安装依赖后，在仓库根目录执行：
+Obtain the actual working tree containing these new tests, or the subsequent PR. Running only the original main cannot establish a review of these additions. Install dependencies according to the README, then run from the repository root:
 
 ```powershell
 $env:PYTHONUTF8 = '1'
@@ -67,7 +67,7 @@ $env:PYTHONDONTWRITEBYTECODE = '1'
 python -B -m unittest discover -s tests -p test_controller_consistency.py -v
 ```
 
-默认应为 9 项、8 通过＋1 浏览器跳过。若使用本机已安装 Edge，开启浏览器检查：
+The default result should be 9 tests: 8 passes + 1 browser skip. To use an already installed Edge, enable browser checks:
 
 ```powershell
 $env:MVP_BROWSER_TESTS = '1'
@@ -75,25 +75,25 @@ $env:PLAYWRIGHT_CHANNEL = 'msedge'
 python -B -m unittest discover -s tests -p test_controller_consistency.py -v
 ```
 
-预期 9 项全通过。若使用 Playwright 安装的 Chromium，则不要设置 `PLAYWRIGHT_CHANNEL=msedge`，按自己的缓存配置运行。测试不需要真实密钥、余额或 `.env`。完整框架回归：
+Expect all 9 to pass. For Playwright-installed Chromium, do not set `PLAYWRIGHT_CHANNEL=msedge`; use the appropriate local cache configuration. These tests need no real key, account balance or `.env`. Full framework regression:
 
 ```powershell
 python -B -m unittest discover -s tests -v
 ```
 
-临时输出位于 `.codex-tmp/`；按工作区规则清理本人本次产生的临时文件，不删除他人已有运行。
+Temporary outputs are under `.codex-tmp/`. Follow workspace rules to remove only temporary files created by your own run; do not delete others' existing runs.
 
-E 请检查并留下自己的意见：
+E should independently check and record:
 
-- [ ] 改动范围仅为 A 的测试及文档，没有顺带改动组员逻辑。
-- [ ] 核对模拟响应、虚拟时间和真实浏览器的边界，没有把替身结果当模型能力。
-- [ ] 检查每个状态的退出码、游戏副本、计划哈希与摘要/checkpoint 的对应关系。
-- [ ] 核对 A6 的篡改检测限制，以及 A8 不代表完整验收。
-- [ ] 在本人环境复现定向测试，记录 Python/浏览器版本、通过/跳过/失败及实际源码版本。
-- [ ] 复核后在后续 PR 或交接记录中明确“无阻塞/需修改/未能复现”，不代填为已批准。
+- [ ] Changes are limited to A's tests and documentation, with no incidental changes to teammates' logic.
+- [ ] Boundaries between scripted responses, virtual time and real-browser execution are accurate; substitutes are not presented as model capability.
+- [ ] Exit codes, game copies, plan hashes and summary/checkpoint correspondence are checked for every state.
+- [ ] A6's tampering-detection limitation is clear, and A8 is not full acceptance.
+- [ ] Focused tests are reproduced locally, recording Python/browser versions, passes/skips/failures and actual source version.
+- [ ] The subsequent PR or handoff explicitly records “no blocker / changes needed / unable to reproduce”; approval is not filled in on the reviewer's behalf.
 
-## 6. 候选冻结准备状态
+## 6. Candidate-freeze readiness
 
-本轮只能称 A 作者侧验证完成。仍需 E 独立复核、必要的 PR 审查与合并，以及全组确定模型、预算、命令、题目资格、跨机器证据和课程交付要求。当前 main 不自动变成冻结版本。
+Only A's author-side validation is complete in this record. E's independent review, required PR reviews/merges, and team agreement on model, budgets, commands, task eligibility, cross-machine evidence and course delivery requirements remain necessary. Current main does not automatically become a frozen release.
 
-S1 现有草案保持冻结前参考；正式新 S1 在评估候选冻结后再编写并交 B。A 后续还负责独立复核、执行 E 编写的 S5。报告/展示中可引用本轮测试，但不得将旧框架能力或 C 的冲突检测实现说成 A 本轮从零开发。
+Existing S1 drafts remain pre-freeze references. A new formal S1 is to be authored after the evaluation-candidate freeze and handed to B. A also later independently reviews and executes E's S5. The report/presentation may cite these tests, but must not present existing framework capabilities or C's conflict detection as newly implemented from scratch by A this round.

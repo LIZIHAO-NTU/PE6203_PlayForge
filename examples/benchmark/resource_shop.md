@@ -1,4 +1,4 @@
-# Resource Shop / 资源升级小游戏
+# Resource Shop
 Build an offline vanilla HTML/CSS/JS game with a visible DOM board marked data-game-surface.
 - Initial coins=10, power=1, phase=Playing. #coins and #power show bare integers; #status shows Playing or Won exactly.
 - #earn adds exactly 1 coin per click while Playing.

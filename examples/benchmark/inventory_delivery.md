@@ -1,4 +1,4 @@
-# Inventory Delivery / 库存配送
+# Inventory Delivery
 Create an offline vanilla HTML/CSS/JavaScript DOM game with a visible board marked data-game-surface.
 - Initial coins=5, cargo=0, stock=2, delivered=0, phase=Playing.
 - #coins, #cargo, #stock, #delivered display bare integers. #status displays exactly Playing or Won.

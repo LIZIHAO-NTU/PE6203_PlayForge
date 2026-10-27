@@ -1,4 +1,4 @@
-# Tiny Sokoban / 推箱子
+# Tiny Sokoban
 Build a vanilla offline HTML/CSS/JS game; simple DOM or Canvas rendering is fine.
 Use a 5x5 grid with x increasing right and y increasing down, zero-based coordinates.
 Every outer cell (x=0/4 or y=0/4) is a wall. All nine inner cells are floor.

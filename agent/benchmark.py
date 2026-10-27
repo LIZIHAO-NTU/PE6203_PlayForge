@@ -95,7 +95,7 @@ def check_frozen_sources(case):
 def save_report(output, report):
     report["metrics"] = metrics(report["cases"])
     (output / "benchmark.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-    lines = ["# 多玩法测试 / Cross-mechanic benchmark", "",
+    lines = ["# Cross-mechanic benchmark", "",
              f"Agent: {report['agent_version']} · Model: {report['model']}",
              f"API attempts: {report['metrics']['api_attempts']} / {report['max_total_calls']}", "",
              "| Case | Family | Launch | Model plan | Independent checks | Calls | Status |",
@@ -105,14 +105,14 @@ def save_report(output, report):
         lines.append(f"| {row['run_id']} | {row['family']} | {row.get('launch_passed', False)} | "
                      f"{row.get('model_plan_passed', False)} | {checks} | "
                      f"{row.get('usage', {}).get('api_attempts', 0)} | {row['status']} |")
-    lines += ["", "独立检查未提供给生成模型，不改变原运行成绩；通过仍不等于完整游戏验收。",
-              f"独立验收覆盖：{report['metrics']['independent_evaluated']}/{report['metrics']['scheduled']}；"
-              f"未尝试：{report['metrics']['not_attempted']}；已尝试但无独立结果：{report['metrics']['attempted_without_independent_result']}。",
-              f"自测通过／独立失败：{report['metrics']['self_pass_independent_fail']}；"
-              f"自测失败／独立通过：{report['metrics']['self_fail_independent_pass']}。分歧需要复核，不自动判定谁正确。",
-              "每类一次仅用于可行性检查，不能据此声称已经稳定泛化。", "",
-              "各次生成游戏位于 cases/<run_id>/game；模型计划和修复记录位于该目录的 traces/；",
-              "独立检查结果和截图位于 acceptance/<run_id>/。使用 python -m agent serve <game目录> 试玩。"]
+    lines += ["", "Independent checks are not supplied to the generating model and do not change original run scores; a pass is still not full game acceptance.",
+              f"Independent evaluation coverage: {report['metrics']['independent_evaluated']}/{report['metrics']['scheduled']}; "
+              f"not attempted: {report['metrics']['not_attempted']}; attempted without an independent result: {report['metrics']['attempted_without_independent_result']}.",
+              f"Self-pass / independent-fail: {report['metrics']['self_pass_independent_fail']}; "
+              f"self-fail / independent-pass: {report['metrics']['self_fail_independent_pass']}. Disagreements need review; neither side is automatically treated as correct.",
+              "One trial per family checks feasibility only and cannot establish stable generalization.", "",
+              "Generated games are in cases/<run_id>/game; model plans and repair records are in that case's traces/;",
+              "independent results and screenshots are in acceptance/<run_id>/. Play with python -m agent serve <game_directory>."]
     (output / "BENCHMARK.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 

@@ -14,7 +14,9 @@ For installation and first use, read [Installation and configuration](#2-install
 
 ### Recorded validation baseline (2026-10-27)
 
-The evaluated runtime baseline is commit `c94e029f25e7fa8d6c90197ad051b60ac88d74b2`, version `1.2.1`, after PRs #6, #7 and #8 were merged. This README update does not change the Agent, prompts or test logic. Validation results remain attributed to the tested commit rather than being relabelled as tests of a later documentation commit.
+The evaluated runtime baseline is commit `c94e029f25e7fa8d6c90197ad051b60ac88d74b2`, version `1.2.1`, after PRs #6, #7 and #8 were merged. The installation-guide update that recorded this baseline changed only the README. Validation results remain attributed to the tested commit rather than being relabelled as tests of a later documentation commit.
+
+Repository documentation and development samples are maintained in English. The language conversion also translates fixed text in generated reports and export READMEs, without changing Agent control flow, prompts, test steps or assertion values. Translated sample files have new hashes; historical results and fingerprints refer to their recorded originals and are not rescored by the translation. Existing saved runs are preserved verbatim. User/model-supplied text is preserved rather than automatically translated in reports.
 
 - **Full framework regression: 343/343 passed**, zero skips/failures, on Windows / Python 3.11.9 / Playwright 1.63.0 / Edge 156.0.4314.42. Model responses were scripted and no paid model API was used. This is not a 343-game success rate.
 - **One real DeepSeek development smoke:** four API attempts using `deepseek-flash` generated a launchable tic-tac-toe game. The original autonomous result was `plan_review_required`: a model-authored check compared display text `Turn: O` directly with state value `O`. Both checked candidates passed 5/6 self-tests. Five selected independent checks subsequently passed in two read-only repetitions; that does not change the original failure or establish full game acceptance.
@@ -48,7 +50,7 @@ Spec → Plan → Generate → Browser verification → Bounded repair
 - **Repair memory**: recent failures and passed checks, continuing from a better version; not cross-task learning.
 - **Planning fallback**: may generate the original-spec game after invalid planning, but only claims startup evidence; disabled by `--strict-plan`.
 - **Planning recovery**: one budget-bounded recovery request after startup, then freeze, retest and repair; startup evidence is not reused as functional success.
-- **Completion gate**: complete test evidence and input-followed-by-rule assertions, plus DOM/state consistency checks. See [QUALITY.md](QUALITY.md) (Chinese).
+- **Completion gate**: complete test evidence and input-followed-by-rule assertions, plus DOM/state consistency checks. See [QUALITY.md](QUALITY.md).
 
 ## 2. Installation and configuration
 
@@ -462,7 +464,7 @@ This zero-API command copies the current agent, pinned requirements and exact `g
 
 Run this from the workspace root; do not launch the package from inside its `agent/` subdirectory. The export's README explains that an approved specification must be supplied separately as `SPECIFICATION.md` for a new development run; the original live input file is not automatically included. To play an exported result without generating anything, use `python -m agent serve game` from the export root. The package has additional runtime/configuration/manifest files alongside the required directories; verify the final submission rules rather than assuming its layout is formally approved.
 
-Exporting does not turn an old or assisted run into a valid autonomous course demonstration. It is a separate post-run operation, not a remedy for missing autonomous outputs. It copies trace contents, which may include prompts, responses, generated code and private context: excluding `.env` and redacting a configured key do not make every trace safe to publish. This README-only update does not modify the helper's generated short instructions or the Agent's output behavior.
+Exporting does not turn an old or assisted run into a valid autonomous course demonstration. It is a separate post-run operation, not a remedy for missing autonomous outputs. It copies trace contents, which may include prompts, responses, generated code and private context: excluding `.env` and redacting a configured key do not make every trace safe to publish. The helper still generates its own short instructions; translating those instructions does not make it copy this full guide or change the Agent's output layout.
 
 - **Playwright missing**: install and run with the same `.venv` interpreter.
 - **Browser unavailable**: install Chromium, or set `PLAYWRIGHT_CHANNEL=msedge`, then run `doctor`.

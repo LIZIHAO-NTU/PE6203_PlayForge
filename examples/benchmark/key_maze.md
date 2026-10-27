@@ -1,4 +1,4 @@
-# Key and Door Maze / 钥匙门迷宫
+# Key and Door Maze
 Build an offline vanilla HTML/CSS/JS grid game, visibly rendered on Canvas or a DOM board marked data-game-surface.
 The ordinary fixed level is 5 columns by 4 rows, coordinates x right/y down from zero:
 #####

@@ -1,104 +1,104 @@
-# PlayForge｜阶段交接与下一步行动清单
+# PlayForge: Stage Handoff and Next Actions
 
-更新日期：2026-10-22。适用范围：PE6203 项目 1，五人组 A—E。
+Updated: 2026-10-22. Scope: PE6203 Project 1, five-person team A–E.
 
-本文用于确认现状、明确下一项交付，不改变原有分工，不代表正式冻结或正式验收通过。建议各成员在 **10 月 23 日 20:00 前**回复状态和预计完成时间；这是可由全组调整的内部建议，不是课程截止时间。
+This document records the status and next deliverables. It does not change the existing responsibilities or establish a formal freeze or acceptance pass. Members are asked to reply with their status and estimated completion time by **October 23, 20:00**; this is an adjustable internal suggestion, not a course deadline.
 
-## 一、当前共同起点
+## 1. Shared starting point
 
-- 项目：**PlayForge: Build a Coding Agent That Can Build a Game**。
-- 已核实的 GitHub main：`8eb314555011435cb44a70b79f11044ec63472d0`。
-- B 的 PR #1/#2、C 的 PR #3、D 的 PR #5 均已合并。
-- C 的 PR #4 仍是 Draft，仅新增 S3 公开需求，不含独立验收答案；D 已留下独立静态复核。PR 描述已修正 LF/CRLF 两种文件的哈希说明。
-- 上述 main 的文件树与此前通过 **334/334、零跳过**完整浏览器回归的组合树一致。这是框架回归，不是未知游戏成功率。
-- A 本轮新增的控制层测试及说明按独立 A 分支/PR 发布，**E 的独立复核尚待完成**，上传不等于已合并 main；以 GitHub 实际 PR 状态为准。结果索引中的 `status_at_recording` 保留原始本地验证时的状态，不作为实时发布状态。
+- Project: **PlayForge: Build a Coding Agent That Can Build a Game**.
+- Verified GitHub main: `8eb314555011435cb44a70b79f11044ec63472d0`.
+- B's PRs #1/#2, C's PR #3 and D's PR #5 have been merged.
+- C's PR #4 is still a Draft. It adds only the public S3 requirement, without independent acceptance answers. D has recorded an independent static review. The PR description now distinguishes the LF and CRLF file hashes correctly.
+- This main tree matches the combined tree that previously passed the full browser regression: **334/334, zero skips**. This is framework regression evidence, not an unseen-game success rate.
+- A's new controller tests and documentation are published on a separate A branch/PR. **E's independent review is still pending.** Publication does not mean a merge into main; consult the actual GitHub PR status. The result index preserves `status_at_recording` from the original local validation, rather than acting as a live publication status.
 
-GitHub 仓库：[LIZIHAO-NTU/PE6203_PlayForge](https://github.com/LIZIHAO-NTU/PE6203_PlayForge)。
+GitHub repository: [LIZIHAO-NTU/PE6203_PlayForge](https://github.com/LIZIHAO-NTU/PE6203_PlayForge).
 
-## 二、本阶段要完成什么
+## 2. Goals for this stage
 
-先完成主任务交付、交叉复核和候选配置确认，再锁定评估候选、出题并运行正式评估。暂不扩大游戏类别、不增加复杂引擎，也不把独立审计工具直接接入生产判定。
+Complete the primary deliverables, cross-reviews and candidate configuration first. Then freeze the evaluation candidate, author the tasks and run the formal evaluation. Do not expand game categories, add complex engines or connect the independent auditor directly to production completion decisions at this stage.
 
-需要区分三个状态：
+Distinguish three states:
 
-1. **工作基线**：大家继续开发的共同起点，当前为上面的 main。
-2. **评估候选冻结**：明确代码 SHA、模型、开关、预算和命令，评估期间不边测边改。
-3. **最终交付确认**：评估完成后根据完整结果决定交付版本；有修复则另记版本和结果，不沿用旧结论。
+1. **Working baseline:** the shared starting point for continued development, currently the main commit above.
+2. **Evaluation candidate freeze:** record the code SHA, model, feature switches, budgets and commands. Do not change the candidate while evaluating it.
+3. **Final delivery confirmation:** choose the delivered version after reviewing the complete evaluation. Record fixes under a separate version and results rather than carrying forward earlier conclusions.
 
-不必等正式 S1—S5 全部执行完才冻结评估代码；正式题按原方案应在评估候选冻结后形成。
+The evaluation code can be frozen before all formal S1–S5 runs finish. Under the original plan, formal tasks should be authored after the evaluation candidate is frozen.
 
-## 三、每个人现在的下一项交付
+## 3. Each member's next deliverable
 
-| 成员 | 当前已见成果 | 现在需要做什么 | 交付给谁 |
+| Member | Observed progress | Next action | Recipient |
 |---|---|---|---|
-| A：控制流程与集成 | 已完成 C/D 的集成核对；本轮增加控制层一致性测试和留档 | 请 E 复核本次独立 A 分支/PR 的测试、结果和边界说明；A 组织各成员反馈，整理待全组确认的候选清单 | A 主任务交 E 审查；冻结方案由全组确认 |
-| B：需求与规划 | 两个 PR 已合并；规划问题与负面实验结论已记录；已复核 C 和 S1 参考草案 | 确认主任务是否收口、是否还有必须入候选的改动；提供本人报告/展示所需结论与证据链接。不要求强行新增策略 | 交 A 确认集成状态；正式新 S2 后续交 C |
-| C：生成与修复判断 | PR #3 已合并；已审查批准 D；PR #4 的当前说明已更新 | 确认修复方向有无剩余阻塞；PR #4 若已准备好，转 Ready for review 并按文档 PR 流程处理；不再重复修正已解决的哈希问题 | 与 A 协调 PR #4；正式 S3 的题目资格先由全组确认 |
-| D：独立验证与证据 | PR #5 已合并；S3 v5 的 79 个预期值静态复核已记录；S4 草案已提供 | 复核 E 的主任务；维护全组结果索引和统计口径；请 E 确认 S4 草案的复核进度。不要包办五个题的全部运行 | E 主任务的主审；正式 S3 的执行人 |
-| E：复现与交付 | 当前可见材料中尚未找到主任务交付链接，不代表未开展工作 | 优先同步实际进度、材料链接和预计交付时间；完成干净环境复现、输出/导出与隐私检查；核验课程启动及交付要求；复核 A 主任务和 S4 草案 | E 主任务交 D；A 的复核意见回复 A |
+| A: controller and integration | C/D integration checked; controller-consistency tests and records added this round | Ask E to review the tests, results and scope statements on A's separate branch/PR. Collect member updates and prepare the candidate checklist for team confirmation | E reviews A's primary task; the whole team confirms the freeze plan |
+| B: requirements and planning | Two PRs merged; planning issues and negative experimental findings recorded; C and the S1 reference drafts reviewed | Confirm primary-task closure and any changes still required in the candidate. Supply conclusions and evidence links for B's report/presentation contribution; no forced new strategy is required | A confirms integration status; the new formal S2 later goes to C |
+| C: generation and repair decisions | PR #3 merged; D reviewed and approved; PR #4 description updated | Confirm any remaining repair blockers. If PR #4 is ready, mark it Ready for review and follow the documentation PR process; do not repeat the resolved hash correction | Coordinate PR #4 with A; the team first confirms formal S3 eligibility |
+| D: independent verification and evidence | PR #5 merged; static review of 79 expected values in S3 v5 recorded; S4 draft supplied | Review E's primary task, maintain the shared result index and metric definitions, and ask E about the S4 draft review. Do not take over all five task executions | Primary reviewer of E's task; executor of formal S3 |
+| E: reproduction and delivery | No primary-task delivery link has been found in the currently visible materials; this does not imply no work has been done | First share actual progress, material links and expected delivery time. Complete clean-environment reproduction, output/export and privacy checks; verify course startup/delivery requirements; review A's task and the S4 draft | D reviews E's task; send A's review feedback to A |
 
-### E 的交付建议至少包括
+### Suggested minimum contents of E's delivery
 
-- 新环境的 Python、依赖、浏览器版本与安装/启动记录。
-- 零 API 检查，以及一次预算明确的真实 API 小范围冒烟；`doctor` 不能代替模型服务验证。
-- 输入、输出目录、`game/`、`traces/`、摘要和 `export-run` 的对应关系。
-- 密钥、私人路径和原始响应是否进入分享材料的检查。
-- 一个启动、复现或交付可靠性问题的验证/修复结论。若没有发现问题，提供验证依据即可。
-- 教师最新启动方式、技术范围、模型/预算、交付布局与展示安排的通知来源；未公布或未确认的项目明确标待定。
+- Python, dependency and browser versions in a fresh environment, with installation/startup records.
+- Zero-API checks and one explicitly budgeted real-API smoke test; `doctor` cannot replace model-service validation.
+- The relationship between the input, output directory, `game/`, `traces/`, summaries and `export-run`.
+- Checks for keys, private paths and raw responses in shared materials.
+- A validation/fix conclusion for a startup, reproduction or delivery reliability issue. If no issue is found, provide the verification evidence.
+- Sources for the instructor's latest startup method, technical scope, model/budget, submission layout and presentation arrangements. Explicitly mark unannounced or unconfirmed items as pending.
 
-已有材料直接发链接，不需要为了本清单重做实验。至少两位成员电脑跑通完整流程的证据仍需全组收齐，不能用单台机器的框架测试代替。
+Link existing materials directly; do not repeat experiments merely for this checklist. The team still needs evidence that the complete workflow runs on at least two members' computers; framework tests on one machine are not a substitute.
 
-## 四、A 本轮成果与交叉复核
+## 4. A's deliverables and cross-review this round
 
-本轮问题：预算、异常、退化或待复核停止后，最终游戏、选中轮次、固定计划和日志是否一致？
+Question: after stopping for budget limits, exceptions, regression or review, are the final game, selected round, fixed plan and logs consistent?
 
-- 新测试：[tests/test_controller_consistency.py](../tests/test_controller_consistency.py)。
-- 技术说明和 E 的复核清单：[A_CONTROLLER_CONSISTENCY.md](A_CONTROLLER_CONSISTENCY.md)。
-- 验证结果索引：[a_controller_consistency_results.json](a_controller_consistency_results.json)。
-- 验证结果：定向测试 **9/9、零跳过**；新增测试后的完整浏览器回归 **343/343、零跳过**。结果对应 `8eb3145` 加本地新增测试，不是 GitHub 原 main 自带 343 项测试。
-- 模型响应采用脚本化替身；其中一项使用真实浏览器。没有真实模型调用，不构成新的游戏生成样本。
-- 未发现本轮所测边界需要修改生产 Agent 的缺陷；本轮只增加测试与留档。**E 的独立复核尚待完成。**
+- New tests: [tests/test_controller_consistency.py](../tests/test_controller_consistency.py).
+- Technical explanation and E's review checklist: [A_CONTROLLER_CONSISTENCY.md](A_CONTROLLER_CONSISTENCY.md).
+- Result index: [a_controller_consistency_results.json](a_controller_consistency_results.json).
+- Results: focused tests **9/9, zero skips**; full browser regression after adding the tests **343/343, zero skips**. These results apply to `8eb3145` plus the local additions; the original GitHub main did not already contain 343 tests.
+- Model responses are scripted substitutes; one test uses a real browser. No real model calls were made, so these are not new game-generation samples.
+- No defect requiring production Agent changes was found within the tested boundaries. This round adds only tests and records. **E's independent review remains pending.**
 
-## 五、正式 S1—S5 怎样继续
+## 5. Continuing formal S1–S5
 
-| 规格 | 主笔 | 独立复核并执行 |
+| Specification | Author | Independent reviewer and executor |
 |---|---|---|
-| S1：移动、边界或碰撞 | A | B |
-| S2：回合与合法/非法动作 | B | C |
-| S3：文本或数值输入 | C | D |
-| S4：资源、上限与终局 | D | E |
-| S5：简单实时目标或稳定性 | E | A |
+| S1: movement, boundaries or collision | A | B |
+| S2: turns and legal/illegal actions | B | C |
+| S3: text or numeric input | C | D |
+| S4: resources, caps and terminal states | D | E |
+| S5: simple real-time objectives or stability | E | A |
 
-1. **题目资格先确认。** 原手册要求冻结后形成新英文规格。本文建议沿用原规则，现有 S1/S3/S4 草案作为参考。如果全组改用预先保留题，必须记录出题时间、是否用于定向优化及评估资格，不能把改名后的旧题说成冻结后新题；由 A 发起确认，未回复不视为同意。
-2. 主笔提供原始需求、独立验收及预期依据；非作者复核后，在看到生成游戏前定稿并记录实际文件哈希。
-3. 生成 Agent 只能取得原始需求；独立验收步骤、答案和结果不进入规划、生成、审查或修复消息。另放文件夹并不等于技术隔离，执行人需要核查实际读取路径。
-4. 每人执行分配给自己的一个题，保留首次运行、失败和未验证项；自动与人工分开，不向 D 集中全部操作。
-5. 本轮评估全部封存后再讨论修复；有源码/提示词改动就另记候选，旧结果保留。
+1. **Confirm task eligibility first.** The original handbook requires new English specifications after the freeze. This document recommends retaining that rule and treating existing S1/S3/S4 drafts as references. If the team instead uses previously reserved tasks, record their authorship dates, whether they informed targeted optimization, and their evaluation eligibility. Do not describe a renamed old task as newly authored after the freeze. A initiates confirmation; silence is not consent.
+2. Authors supply the original requirement, independent acceptance and expected-outcome rationale. After non-author review, finalize them and record actual file hashes before viewing the generated game.
+3. The generation Agent receives only the original requirement. Independent acceptance steps, answers and results must not enter planning, generation, review or repair messages. Separate folders alone do not establish technical isolation; executors must verify actual read paths.
+4. Each member executes their assigned task, preserving the first run, failures and unverified items. Separate automatic and manual checks; do not delegate all operations to D.
+5. Discuss fixes only after all results from this evaluation are archived. Any source/prompt change gets a separate candidate; preserve earlier results.
 
-S3 当前的 **10 自动＋3 人工**是验收草案规模，不是已执行通过数。D 的 **6 项证据支持通过＋5 类受控异常检出**是开发证据审计，不是 S3 成绩。
+S3's current **10 automatic + 3 manual** items describe the acceptance draft, not executed passes. D's **6 evidence-supported passes + detection of 5 controlled anomaly categories** describe development-evidence auditing, not S3 performance.
 
-## 六、冻结前待全组确认的清单
+## 6. Team confirmation checklist before freezing
 
-| 项目 | 当前状态/需要确认的内容 |
+| Item | Recorded status / confirmation needed |
 |---|---|
-| 必须进入候选的代码 | 各负责人报“已收口”或具体 PR/阻塞；A 本轮测试按独立 PR 审查，E 复核待完成 |
-| 当前 main | `8eb314555011435cb44a70b79f11044ec63472d0`，只是工作基线 |
-| 评估候选完整 SHA | 待必要改动审查合并后共同确定，本文不代为冻结 |
-| 模型与接口 | 待确认；若先用组内开发模型，明确不是已确认的教师模型 |
-| 调用/轮数/时间预算 | 待全组确认；手册的 5 次/3 轮/360 秒只是建议，不是已生效的教师规则 |
-| 主要开关及命令 | 记录实际值，不默认开启计划审查、结构化摘要或跨运行记忆 |
-| 环境与交付 | E 提交证据，D 复核；教师未明确的要求保持待定 |
-| 题目资格与验收隔离 | 按第五节形成全组决定，验收答案保持隔离 |
-| 开始正式评估 | 上述条件明确后，由各规格执行人按统一配置开始 |
+| Required candidate code | Each owner reports closure or specific PRs/blockers; A's tests receive separate PR review, with E's review pending |
+| Current main | `8eb314555011435cb44a70b79f11044ec63472d0`, a working baseline only |
+| Full evaluation candidate SHA | Agree after required changes are reviewed and merged; this document does not freeze it |
+| Model and endpoint | Pending; if using the team's development model first, distinguish it from a confirmed instructor model |
+| Call/round/time budgets | Pending team confirmation; the handbook's 5 calls / 3 rounds / 360 seconds are suggestions, not effective instructor rules |
+| Main switches and commands | Record actual settings; do not enable plan audit, structured summaries or cross-run memory by default |
+| Environment and delivery | E supplies evidence, D reviews; unconfirmed instructor requirements remain pending |
+| Task eligibility and acceptance isolation | Reach a team decision under Section 5 and keep acceptance answers isolated |
+| Start formal evaluation | Once the above is settled, each specification's executor starts with the shared configuration |
 
-## 七、群内统一更新格式
+## 7. Shared group-update format
 
-每人回复一次以下信息即可，不需要再写一份长报告：
+Each person can reply once with the following information; no extra long report is required:
 
-> - 我的主任务状态：已交付/进行中/被阻塞。
-> - 成果与审查链接：……
-> - 还必须进入候选的改动：无/具体 PR。
-> - 缺少的复核或依赖：……
-> - 下一项可检查成果与预计时间：……
+> - My primary-task status: delivered / in progress / blocked.
+> - Deliverable and review links: ...
+> - Changes still required in the candidate: none / specific PR.
+> - Missing reviews or dependencies: ...
+> - Next reviewable deliverable and expected time: ...
 
-各自提交本人技术结论、报告段落和展示证据；E 统一格式，不代写全组内容。GitHub 用于源码、测试、复现说明和精选脱敏证据的版本管理；不要提交密钥、`.env`、缓存和重复的大型运行包。
+Each member supplies their own technical conclusions, report sections and presentation evidence. E standardizes formatting rather than writing everyone's content. Use GitHub to version source, tests, reproduction instructions and selected sanitized evidence; do not commit keys, `.env`, caches or duplicate large run archives.

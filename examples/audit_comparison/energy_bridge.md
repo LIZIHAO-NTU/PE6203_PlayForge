@@ -1,4 +1,4 @@
-# Energy Bridge / 能量桥
+# Energy Bridge
 Create a vanilla offline HTML/CSS/JS grid game. Zero-based x right/y down. Ordinary fixed level:
 #####
 #PBE#

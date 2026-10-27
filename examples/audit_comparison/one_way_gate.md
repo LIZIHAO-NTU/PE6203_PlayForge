@@ -1,4 +1,4 @@
-# One-way Gate / 单向门
+# One-way Gate
 Create an offline vanilla HTML/CSS/JS grid game from scratch. No libraries, backend or remote assets.
 Fixed ordinary level (x increases right, y down, zero-based):
 #####

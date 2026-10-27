@@ -1,17 +1,17 @@
-# 收集星星小游戏
+# Star Collector
 
-制作一个可以在电脑浏览器离线运行的二维单人小游戏。
-使用原生 HTML、CSS、JavaScript，不使用第三方库、外部图片、网络请求或构建工具。
+Create a 2D single-player game that runs offline in a desktop browser.
+Use vanilla HTML, CSS and JavaScript without third-party libraries, external images, network requests or build tools.
 
-## 游戏规则
+## Rules
 
-- 画布为 640 × 420，玩家是一个蓝色方块，初始位置在画面左侧中间。
-- 使用方向键移动玩家；移动应连续、平滑，玩家不能离开画布。
-- 玩家接触黄色星星后，分数增加 10，星星移动到另一个可到达的位置。
-- 第一颗星星位于画面右侧中间，便于玩家发现和收集。
-- 收集 3 颗星星，即 30 分后获胜，停止正常移动并显示胜利提示。
-- 按 P 暂停，再按 P 恢复；暂停期间玩家和游戏状态不继续推进。
-- 提供“重新开始”按钮，重置分数、玩家位置、胜负与暂停状态。
-- 页面显示分数和操作说明，按钮与文字清晰可读。
+- Use a 640 × 420 canvas. The player is a blue square, initially at the middle of the left side.
+- Move with arrow keys. Movement must be continuous and smooth, and the player cannot leave the canvas.
+- Touching a yellow star adds 10 points and moves the star to another reachable position.
+- Place the first star at the middle of the right side so the player can find and collect it.
+- Collecting 3 stars, or 30 points, wins; stop normal movement and show a victory message.
+- Press P to pause and P again to resume. Player and game state must not advance while paused.
+- Provide a “Restart” button that resets score, player position, win/loss and pause state.
+- Show the score and controls, with clearly readable buttons and text.
 
-不需要音效、联网、登录或关卡编辑器。图形使用程序绘制。
+No sound effects, networking, login or level editor are needed. Draw graphics programmatically.

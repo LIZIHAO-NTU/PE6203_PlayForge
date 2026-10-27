@@ -1,101 +1,101 @@
-# PlayForge — MVP 0.3：多玩法与稳定性 / Cross-mechanic reliability
+# PlayForge — MVP 0.3: Cross-Mechanic Reliability
 
-目标是让 Agent 根据未知需求实现正确、可运行的核心玩法，而不是把每个需求变成同一种收集游戏。仍使用单 Agent、DeepSeek 兼容接口、原生离线 HTML/CSS/JS；没有预写游戏代码、游戏引擎、模板或内置通关器。
+The goal is to implement correct, runnable core gameplay from unseen requirements, rather than turn every request into the same collector game. The project retains one Agent, a DeepSeek-compatible interface and vanilla offline HTML/CSS/JS, without prewritten game code, engines, templates or built-in solvers.
 
-## 主要改进
+## Main improvements
 
-1. **玩法分析**：规划时区分实时、回合制、混合交互以及键盘／指针输入，记录核心循环与规则不变量。DOM 棋盘和 Canvas 动画都可使用；不强迫所有游戏具有移动角色、分数或暂停按钮。
-2. **核心优先**：先实现全部强制规则、控制和启动方式，再考虑简单美化。不能以“最小版本”为由删掉原始要求。
-3. **通用交互工具**：增加元素局部坐标点击、Canvas 像素缩放、悬停、拖拽、同时按键；增加 DOM 数量、属性和可用状态检查。`move_to` 仍只用于无障碍连续移动，不能代替推箱子或迷宫的规则。
-4. **修复工作记忆**：保留最近三轮修改摘要、失败观察和已通过检查；从测试表现较好的版本继续，降低后续重写退化的风险。源码哈希检测重复输出，不依赖模型声称做过修改。
-5. **运行优先选择**：选择较好版本时优先考虑完整通过、可显示且无运行错误，再比较检查通过数。仍不是完整玩法质量评分。
-6. **更完整的证据**：每个测试步骤记录动作、参数、结果、耗时或错误；保存固定计划、状态、每轮版本和浏览器证据。
-7. **明确的规划失败降级**：两次功能计划校验仍失败时，若模型明确判定需求受支持，仍尝试根据原始需求生成游戏，只做通用启动检查。结果标为 `partial_game_plan_failed`，功能检查通过率保持未验证，不会把低标准包装成成功。可用 `--strict-plan` 保留规划失败即停止的模式。API 错误和明确不支持的需求不走这条路径。
+1. **Gameplay analysis:** distinguish real-time, turn-based and mixed interactions, plus keyboard/pointer input, and record the core loop and rule invariants. DOM boards and Canvas animation are both possible; not every game needs a moving character, score or pause button.
+2. **Core first:** implement all mandatory rules, controls and startup requirements before simple visual polish. A “minimal version” cannot omit original requirements.
+3. **Generic interaction tools:** add element-local coordinate clicks, Canvas pixel scaling, hover, drag and simultaneous keys, plus DOM count, attribute and enabled-state observations. `move_to` remains limited to unobstructed continuous movement; it cannot replace Sokoban or maze rules.
+4. **Repair working memory:** retain change summaries, failed observations and passed checks from the latest three rounds; continue from the better-tested version to reduce regressions from later rewrites. Source hashes detect duplicate output rather than trusting a model's claim of changes.
+5. **Runnable-candidate selection:** prefer complete passes, then visible artifacts without runtime errors, then check-pass counts. This is still not a complete gameplay-quality score.
+6. **More complete evidence:** record each test step's action, parameters, result, duration or error; preserve the fixed plan, state, round versions and browser evidence.
+7. **Explicit planning-failure fallback:** after two failed functional-plan validations, if the model explicitly identifies the requirement as supported, still try generating from the original requirement with generic startup checks only. Mark the result `partial_game_plan_failed` and functional pass rates unverified; a lower standard is not success. `--strict-plan` retains stop-on-planning-failure behavior. API errors and explicitly unsupported tasks do not take this path.
 
-状态契约允许将嵌套描述规范化为点路径；自动检查项也可附加人工复核。规范化不修改原始模型响应、预期值或游戏规则。禁用按钮被记录为不可激活的 no-op，不会用强制点击或 JS 启用按钮来伪造操作。
+The state contract can normalize nested descriptions into dotted paths; automated requirements may also carry manual review. Normalization does not alter raw model responses, expected values or game rules. Disabled buttons are recorded as non-activatable no-ops; forced clicks or JavaScript enabling are not used to fake operations.
 
-旧版测试计划仍可使用。新计划可增加 `gameplay` 和需求 `priority`；不要求用户手写这些字段。
+Legacy test plans remain usable. New plans may include `gameplay` and requirement `priority`; users need not author those fields.
 
-## 四类测试为什么不同
+## Why the four test families differ
 
-| 需求 | 底层逻辑 | 重点检查 |
+| Requirement | Underlying logic | Main checks |
 |---|---|---|
-| 井字棋 | 离散回合、合法落子、棋盘胜负 | 重复落子不换人、胜利冻结、平局、重开 |
-| 推箱子 | 离散网格、障碍、推动约束 | 墙阻挡、箱子阻挡、合法推动、到达目标 |
-| 记忆配对 | 隐藏信息、二次选择、异步翻回 | 配对计数、不匹配锁定、重复点击、取消旧定时器 |
-| 打砖块 | 连续时间、碰撞、位置积分 | 挡板移动、球砖碰撞、暂停冻结、重置 |
+| Tic-tac-toe | Discrete turns, legal placement, board outcomes | Occupied-cell no-op, win lock, draw, restart |
+| Sokoban | Discrete grid, obstacles, pushing constraints | Walls, blocked crates, legal pushes, reaching targets |
+| Memory pairs | Hidden information, second selection, asynchronous flip-back | Match counting, mismatch lock, repeated clicks, clearing old timers |
+| Brick breaker | Continuous time, collisions, position integration | Paddle movement, ball/brick collision, pause freeze, reset |
 
-这些是小规模、明确且可复现的可行性需求，不代表所有游戏。打砖块的完整通关、所有碰撞边界，其他游戏的所有规则排列，以及整体可玩性和画面真实性仍需额外验收。固定初始布局只属于测试输入，不会成为 Agent 中的游戏模板。
+These are small, explicit and reproducible feasibility tasks, not representative of every game. Full brick-breaker completion and collision boundaries, all rule permutations in the other games, overall playability and visual/state fidelity need further acceptance. Fixed initial layouts belong to evaluation inputs and do not become Agent game templates.
 
-## 三种结果分别统计
+## Report three result types separately
 
-- **启动率**：有可见游戏画面且所选版本未记录运行错误。不证明核心规则完整。
-- **模型计划通过率**：Agent 自己生成的固定检查是否全部通过，仍可能有共同误解。
-- **独立检查通过率**：生成前编写的另一份检查是否通过。它不会传给生成模型，也不会反馈给本轮修复，不改变原运行成绩。
+- **Startup rate:** a visible game surface exists and the selected version has no recorded runtime error. This does not prove complete core rules.
+- **Model-plan pass rate:** whether the Agent's own frozen checks all pass; shared misunderstandings remain possible.
+- **Independent-check pass rate:** whether separate checks authored before generation pass. They are not supplied to the generating model or fed back into repair for that run, and do not change its original score.
 
-独立计划主要使用 DOM 观察；打砖块的部分位置检查仍读取游戏提供的只读状态接口。因此独立检查也不是游戏行为的完备证明。没有把模型“看起来不错”的评价当作验收。
+Independent plans primarily use DOM observations; some brick-breaker position checks still read the game's own read-only state interface. They are therefore not complete proofs of game behavior. A model's “looks good” judgment is not acceptance.
 
-报告按玩法分别列出结果，并提供各玩法通过率的宏平均，避免容易类型的多次成功掩盖困难类型。每类一次只能说明本次可行性，不能给出可靠成功概率。比较版本或提示词时，必须固定需求集、模型、预算、检查与重复次数；没有旧版本对照时不能声称提升了某个百分比。
+Reports list results by mechanic and macro-average per-family pass rates so repeated easy cases do not hide difficult families. One run per family establishes only that trial's feasibility, not a reliable success probability. Version/prompt comparisons must fix requirements, model, budgets, checks and repetition counts. Without an old-version comparison, no percentage improvement can be claimed.
 
-## 使用
+## Usage
 
-沿用自己的 Python 环境与 `.env`，先安装 `requirements.txt` 和 Playwright 浏览器。不要分享 API key。
+Use your own Python environment and `.env`; first install `requirements.txt` and a Playwright browser. Do not share API keys.
 
 ```powershell
 python -m agent benchmark examples/benchmark/suite.json --max-total-calls 20 --max-calls-per-case 5 --max-rounds 3 --max-seconds 420
 ```
 
-所有实际 API 尝试，包括规划、格式重试和网络重试，都计入同一个总调用上限。没有足够预算的用例保留为 skipped，不能删除它们来提高成绩。调用次数限制不是金额保证；费用取决于模型单价、token 与服务商计费。默认每类一次。
+All actual API attempts, including planning, formatting retries and network retries, share the total call cap. Cases without sufficient budget remain skipped; do not remove them to improve results. A call cap is not a monetary guarantee: charges depend on model prices, tokens and provider billing. The default is one run per family.
 
-需要重复测试时可增加 `--repeats 2`，并自行设置可接受的总调用预算；该操作仍会付费。新增需求可在 `examples/benchmark/` 放 `.md` 与对应独立验收 `.json`，再登记到 `suite.json`。不要把验收计划或历史游戏代码注入生成提示词。
+For repeated trials, add `--repeats 2` and choose an acceptable total call cap; this still incurs charges. Add new requirement `.md` files and corresponding independent acceptance `.json` files under `examples/benchmark/`, then register them in `suite.json`. Do not inject acceptance plans or historical game code into generation prompts.
 
-结果保存在新的 `runs/benchmark_*/`：
+Results go into a new `runs/benchmark_*/`:
 
 ```text
-BENCHMARK.md / benchmark.json       汇总结果
-cases/<case_id>/game/               自动生成的完整游戏
-cases/<case_id>/traces/             模型计划、执行、修复与用量
-acceptance/<case_id>/               独立检查结果及截图
+BENCHMARK.md / benchmark.json       Aggregate results
+cases/<case_id>/game/               Complete automatically generated game
+cases/<case_id>/traces/             Model plans, execution, repairs and usage
+acceptance/<case_id>/               Independent results and screenshots
 ```
 
-已有输出不会覆盖；`.env` 和运行日志保持 Git 忽略。用以下命令试玩某次结果：
+Existing outputs are not overwritten; `.env` and run logs remain Git-ignored. Play a saved result with:
 
 ```powershell
-python -m agent serve runs/<benchmark目录>/cases/tic_tac_toe_01/game
+python -m agent serve runs/<benchmark_directory>/cases/tic_tac_toe_01/game
 ```
 
-框架测试（不调用付费模型）：
+Framework tests, without paid model calls:
 
 ```powershell
 python -B -m unittest discover -s tests -v
 ```
 
-设置 `MVP_BROWSER_TESTS=1` 后包含实际浏览器回归；可设置 `PLAYWRIGHT_CHANNEL=msedge` 使用已安装的 Edge。所有测试临时文件应放在 `.codex-tmp/`，测试完成后清理。真实生成的游戏和 traces 是最终测试证据，不是临时预览。
+Set `MVP_BROWSER_TESTS=1` to include real-browser regression; `PLAYWRIGHT_CHANNEL=msedge` uses installed Edge. All temporary test files belong in `.codex-tmp/` and should be cleaned after testing. Real generated games and traces are final test evidence, not temporary previews.
 
-## 本次验证记录（2026-10-10）
+## Validation record for this round (2026-10-10)
 
-- 最终代码 **83/83 项框架测试通过**，最终复核耗时 44.979 秒，包括真实 Edge 浏览器交互、超时、修复、计划失败降级与共享预算。模型响应为模拟；此项不连接付费 API。
-- 真实模型沿用本地配置的 `deepseek-flash`。第一批用了 4 次 API 调用；根据规划格式问题修正通用兼容性后，第二批用了 16 次，合计 **20 次**。失败调用和重试没有另算或隐藏。
-- 第一批：井字棋生成成功并通过 5/5 独立检查；推箱子在规划校验失败，未生成游戏；其余两项未执行。原始记录保存在 `runs/benchmark_v03_20261010/`。
-- 第二批安排 8 个用例，实际执行 6 个；剩余记忆配对和打砖块的第二次运行因预算不足跳过，记录为 skipped。结果保存在 `runs/benchmark_v03_20261010_refined/`。
+- Final code: **83/83 framework tests passed**, final verification 44.979 seconds, including real Edge interactions, timeout handling, repair, planning-failure fallback and shared budgets. Model responses are simulated; this check makes no paid API requests.
+- Real trials used the locally configured `deepseek-flash`. The first batch used 4 API calls. After generic compatibility fixes for plan-format problems, the second used 16, for **20 total**. Failed calls and retries were neither counted separately outside this total nor hidden.
+- First batch: tic-tac-toe generated successfully and passed 5/5 independent checks; Sokoban failed planning validation with no game; the other two tasks did not run. Original record: `runs/benchmark_v03_20261010/`.
+- Second batch: 8 scheduled cases, 6 executed. The second memory-pairs and brick-breaker runs were skipped for insufficient budget and remain marked skipped. Results: `runs/benchmark_v03_20261010_refined/`.
 
-| 第二批玩法 | 实际执行次数 | 可启动游戏数 | 独立检查 |
+| Second-batch mechanic | Actual runs | Launchable games | Independent checks |
 |---|---:|---:|---|
-| 井字棋 | 2 | 2 | 两次均 5/5 |
-| 推箱子 | 2 | 2 | 两次均 5/5 |
-| 记忆配对 | 1 | 1 | 5/5；一次自动修复后模型计划也通过 |
-| 打砖块 | 1 | 0 | 规划失败，未生成，不能算通过 |
+| Tic-tac-toe | 2 | 2 | Both 5/5 |
+| Sokoban | 2 | 2 | Both 5/5 |
+| Memory pairs | 1 | 1 | 5/5; the model plan also passed after one automatic repair |
+| Brick breaker | 1 | 0 | Planning failed; no game; not a pass |
 
-井字棋和推箱子的模型自编计划存在错误预期：例如把 O 获胜的落子序列断言为 X 获胜，或把可行走的上方格子当成墙。因此部分原运行仍是 `checks_failed`；独立复测没有覆盖、改写这些成绩。推箱子第二次运行在修复预算耗尽后保留了可启动版本，独立检查通过并不消除该预算耗尽状态。
+Model-authored tic-tac-toe and Sokoban plans contained incorrect expectations: for example, labelling an O-winning sequence as an X win, or treating a walkable upper cell as a wall. Some original runs therefore remain `checks_failed`; independent rechecks did not overwrite these scores. The second Sokoban run preserved a launchable version after exhausting the repair budget; independent passes do not erase that exhausted-budget status.
 
-**付费实测没有使用最终新增的规划失败降级路径及最后的测试序列自检提示。**这些补丁已通过上述零 API 框架测试，但尚未再次用 DeepSeek 端到端复测。打砖块的可行性仍未得到本次实测证明，不能将三个类型的成功推广到所有游戏。
+**The paid trials did not use the final planning-failure fallback or the last test-sequence self-check prompt.** Those patches passed the zero-API framework tests above but were not retested end to end with DeepSeek. This experiment did not establish brick-breaker feasibility, and successes in three families cannot be generalized to every game.
 
-两批合计已知输入 95,410 token、输出 51,710 token，用量未知的调用数为 0。未配置价格时不估造金额，实际费用以服务商账单为准。两批提示词与代码存在迭代差异，不合并为“最终版本成功率”，也没有据此声称相对 0.2 的提升百分比。
+Known combined usage: 95,410 input tokens and 51,710 output tokens; zero calls with unknown usage. Without configured prices, no amount is invented; provider billing is authoritative. Prompts and code changed between batches, so their results are not pooled into a “final-version success rate,” nor used to claim a percentage improvement over 0.2.
 
-## 范围与限制
+## Scope and limits
 
-- 仍仅支持原生离线单人／本地多人二维网页游戏，不支持联网、3D、指定复杂引擎或任意依赖安装。超出范围明确报告，不擅自换题。
-- 本次没有引入自由命令执行、复杂多 Agent、长期向量记忆或任意 JS 测试表达式。
-- 生成代码仍是不可信代码。浏览器、网络和子进程限制不是经过审计的操作系统沙箱。
-- 固定计划可以防止修复阶段降低标准，但错误计划也可能导致误报；必须保留原始需求，结合独立检查与试玩判断。
-- 最终课程启动方式、`game/` 与 `traces/` 提交布局仍需按正式要求对齐，当前历史运行保存在 `runs/`。
+- Vanilla offline single-player/local-multiplayer 2D browser games only; no networking, 3D, prescribed complex engines or arbitrary dependency installation. Report out-of-scope tasks explicitly rather than silently substituting another task.
+- No free-form command execution, complex multi-agent system, long-term vector memory or arbitrary JavaScript test expressions were introduced.
+- Generated code remains untrusted. Browser, network and subprocess restrictions are not an audited operating-system sandbox.
+- Frozen plans prevent repair from lowering standards, but wrong plans can still cause false failures. Preserve original requirements and assess them alongside independent checks and playtesting.
+- Final course startup commands and `game/` / `traces/` submission layout still need alignment with official requirements; historical runs currently live under `runs/`.

@@ -1,4 +1,4 @@
-# Stamp Exchange / 邮票兑换
+# Stamp Exchange
 Create an offline vanilla HTML/CSS/JS DOM game with a visible board marked data-game-surface.
 Initial coins=7, stamps=0, delivered=0, phase=Playing.
 - #earn adds exactly 2 coins per click while Playing.

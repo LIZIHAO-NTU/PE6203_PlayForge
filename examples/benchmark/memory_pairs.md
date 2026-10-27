@@ -1,4 +1,4 @@
-# Six-card Memory Pairs / 记忆配对
+# Six-card Memory Pairs
 Build an offline vanilla browser game, using a visible DOM board marked data-game-surface.
 Six card buttons #card-0 through #card-5 have fixed underlying values [A,B,A,C,B,C].
 This fixed layout is part of the ordinary game specification, not a hidden test mode.

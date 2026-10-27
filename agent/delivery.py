@@ -41,18 +41,15 @@ def export_run(source, output, report=None):
         shutil.copy2(package.parent / name, output / name)
     if report:
         shutil.copy2(report, output / "report.pdf")
-    notes = ("# Exported agent and run / Agent 与运行结果导出\n\n"
-             "Run commands from the export root / 在导出根目录运行：\n\n"
+    notes = ("# Exported agent and run\n\n"
+             "Run commands from the export root:\n\n"
              "```powershell\npython -m pip install -r requirements.txt\n"
              "python -m playwright install chromium\npython -m agent configure\n"
              "python -m agent SPECIFICATION.md\n```\n\n"
              "Before the final command, supply your approved Markdown specification as SPECIFICATION.md. It is intentionally not included in this export. New development runs use runs/.\n"
-             "执行最后一条命令前，请将获准的 Markdown 需求另行放到 SPECIFICATION.md；导出包不会包含需求文件。新开发结果写入 runs/。\n\n"
-             "Play the preserved result / 试玩保留结果：`python -m agent serve game`\n\n"
+             "\nPlay the preserved result: `python -m agent serve game`\n\n"
              "Do not edit game/ or traces/. Local .env configuration is not copied; review traces for private content.\n"
-             "不要修改 game/、traces/；不复制本地 .env 配置。分享 traces 前检查私人内容。\n\n"
-             "A report.pdf is required separately unless supplied to export-run.\n"
-             "未向 export-run 提供报告时，仍需另行添加 report.pdf。\n")
+             "\nA report.pdf is required separately unless supplied to export-run.\n")
     (output / "README.md").write_text(notes, encoding="utf-8")
     (output / "agent/README.md").write_text(notes, encoding="utf-8")
     integrity = all(file_hashes(output / name) == hashes[name] and file_hashes(source / name) == hashes[name]
