@@ -10,13 +10,20 @@ PlayForge is a lightweight game-coding agent for the PE6203 group project: read 
 
 This is an experimental course project, not a guarantee of success on arbitrary unseen games. Scope: offline 2D browser games; selected samples include text/numeric puzzles, platform physics, aiming, local tactics and resource budgets, not networked multiplayer, 3D, backends or complex engines.
 
-### Team validation update (2026-10-22)
+For installation and first use, read [Installation and configuration](#2-installation-and-configuration), then [Generate and play](#3-generate-and-play). The [course run checklist](#course-run-and-submission-checklist) distinguishes the instructor's requirements from the current development/export workflow. Later sections describe optional evaluation tools and historical experiments; they are not prerequisites for starting the Agent.
 
-The integrated production baseline is main `8eb3145`, including B's planning experiment, C's repair-conflict guard and D's standalone evidence auditor. The auditor is not a production completion gate. A adds **9 controller-consistency tests**, without changing `agent/` or prompts: the focused suite passed **9/9**, and the complete browser-enabled suite passed **343/343**, with zero skips and no real model API calls. These results describe that baseline plus A's added test file, not an unknown-game success rate. E's independent review and the team's evaluation freeze remain pending; publication does not imply approval or merge.
+### Recorded validation baseline (2026-10-27)
 
-- [Team handoff and next actions](docs/TEAM_HANDOFF_20261022.md)
+The evaluated runtime baseline is commit `c94e029f25e7fa8d6c90197ad051b60ac88d74b2`, version `1.2.1`, after PRs #6, #7 and #8 were merged. This README update does not change the Agent, prompts or test logic. Validation results remain attributed to the tested commit rather than being relabelled as tests of a later documentation commit.
+
+- **Full framework regression: 343/343 passed**, zero skips/failures, on Windows / Python 3.11.9 / Playwright 1.63.0 / Edge 156.0.4314.42. Model responses were scripted and no paid model API was used. This is not a 343-game success rate.
+- **One real DeepSeek development smoke:** four API attempts using `deepseek-flash` generated a launchable tic-tac-toe game. The original autonomous result was `plan_review_required`: a model-authored check compared display text `Turn: O` directly with state value `O`. Both checked candidates passed 5/6 self-tests. Five selected independent checks subsequently passed in two read-only repetitions; that does not change the original failure or establish full game acceptance.
+- The real run's temporary export probe preserved game/trace fingerprints, excluded the root `.env`, and verified the `SPECIFICATION.md` input instructions. The configured key was not found in the new run artifacts; this is not a general privacy guarantee. Raw requests, responses and local logs remain Git-ignored and are not included in a fresh clone.
+- D's evidence auditor remains a standalone evaluation tool, not a production completion gate. E completed the independent review of A's controller tests; the [review report](https://github.com/LIZIHAO-NTU/PE6203_PlayForge/blob/013727e8daf682272777fa80a0852fea793a20f3/docs/E_PR6_REVIEW.md) describes its exact scope. See [E's reproduction record](docs/E_DELIVERY_REPRODUCTION.md) and [D's review of the export fix](docs/d_reviews/E_DELIVERY_REVIEW.md).
+
+- [Historical team handoff, dated 2026-10-22](docs/TEAM_HANDOFF_20261022.md) — its then-pending statuses are not a live PR tracker.
 - [A's method and E's reproduction checklist](docs/A_CONTROLLER_CONSISTENCY.md)
-- [Recorded results and source fingerprints](docs/a_controller_consistency_results.json)
+- [A's earlier recorded results and source fingerprints](docs/a_controller_consistency_results.json)
 - [Controller-consistency tests](tests/test_controller_consistency.py)
 
 ### Game UI language
@@ -45,58 +52,131 @@ Spec → Plan → Generate → Browser verification → Bounded repair
 
 ## 2. Installation and configuration
 
-Requires Python 3.10+, a model API account and a Playwright browser. Run these Windows PowerShell commands from the repository root.
+"Installation" means preparing Python, the project's pinned libraries, a browser and the model configuration. There is no desktop installer, model training step or required GPU. Complete preparation **before** an autonomous live run; do not rely on installing a missing dependency after the run starts.
+
+### System requirements and tested versions
+
+| Item | Requirement or recorded version |
+| --- | --- |
+| Operating system | Windows and macOS have recorded project checks. Linux setup commands are provided below, but this project does not claim a Linux validation run. |
+| Python | Source requires Python 3.10+. Python 3.11 is the recommended reproduction target; the full Windows regression used 3.11.9. E's clean macOS environment used 3.11.5. Other combinations must be checked before use. |
+| Python libraries | `playwright==1.63.0`, `pyee==13.0.1`, `greenlet==3.5.6`, `typing_extensions==4.16.0`; install from [requirements.txt](requirements.txt), not unpinned packages. |
+| Browser | Playwright-managed Chromium, or an already installed Microsoft Edge with `PLAYWRIGHT_CHANNEL=msedge`. The latest recorded full Windows regression used Edge 156.0.4314.42; E recorded Chromium 153.0.8010.12. These are observations, not requirements to downgrade an installed browser. |
+| Network | Internet access for initial dependency/browser downloads and HTTPS access to the configured model API during generation. Local HTTP/loopback must work for browser verification and serving. Generated games target offline operation. |
+| Account | A valid API key, model access and sufficient provider balance/quota. Teacher-assigned credentials/model settings, when announced, take precedence. |
+| Optional software | Git is needed only for cloning/updating; an extracted source archive also works. Node.js is optional for `--syntax-check`, not required for the default workflow. |
+
+### Step 1 — obtain the source and create an environment
+
+Choose the instructions for your platform. Keep the complete repository layout; do not copy only the Python files or run from inside the `agent/` package directory.
+
+Windows PowerShell:
 
 ~~~powershell
 git clone https://github.com/LIZIHAO-NTU/PE6203_PlayForge.git PlayForge
 cd PlayForge
 python -m venv .venv
 ./.venv/Scripts/python.exe -m pip install -r requirements.txt
-./.venv/Scripts/python.exe -m playwright install chromium
-./.venv/Scripts/python.exe -m agent configure
+./.venv/Scripts/Activate.ps1
 ~~~
 
-Enter your own API key; input is hidden. The command writes a local plaintext `.env`, which is Git-ignored, without calling the model. It refuses to overwrite an existing `.env`; edit that file locally. Never share keys or account passwords.
+macOS / Linux, in a compatible shell:
 
-Explicit virtual-environment interpreter paths avoid installing dependencies into another Python; activation is unnecessary. On macOS/Linux, use `./.venv/bin/python`. Browser regression testing was performed on Windows with Edge.
+~~~bash
+git clone https://github.com/LIZIHAO-NTU/PE6203_PlayForge.git PlayForge
+cd PlayForge
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -r requirements.txt
+~~~
+
+After activation, `python` should refer to this environment. Check `python --version` and `python -m pip --version`. If PowerShell blocks activation, do not change machine-wide security settings just for this guide: you can activate from Windows Command Prompt with `.venv\Scripts\activate.bat`, or use `./.venv/Scripts/python.exe` explicitly for local commands. Prepare the agreed `python` command before the live slot. Linux browser system libraries may require additional platform setup; complete and verify that beforehand.
+
+The following examples use the activated environment's `python`. The explicit Windows interpreter paths in later examples are equivalent; on macOS/Linux their equivalent is `./.venv/bin/python`.
+
+### Step 2 — prepare one browser
+
+**Option A: Playwright Chromium** — recommended if no browser channel has been selected:
+
+~~~text
+python -m playwright install chromium
+~~~
+
+Leave `PLAYWRIGHT_CHANNEL` blank in `.env`. Use the same environment and browser-cache location for installation and execution.
+
+**Option B: installed Microsoft Edge** — ensure Edge is already installed, then set `PLAYWRIGHT_CHANNEL=msedge` in the local `.env` created in the next step. This option does not need a separate Playwright Chromium download, but still requires the Python dependencies. Edge/Chromium is used for automated checks; a normal compatible browser can be used to play the served result.
+
+If you deliberately set `PLAYWRIGHT_BROWSERS_PATH`, use the same setting when downloading and running the browser. Never copy another person's `.venv` or browser cache as an installation method.
+
+### Step 3 — configure your model account locally
+
+For the supplied DeepSeek-oriented configuration:
+
+~~~text
+python -m agent configure
+~~~
+
+Enter your API key; input is hidden. The command writes a plaintext, Git-ignored `.env` in the **current working directory**, makes no model request, and refuses to overwrite an existing file. If `.env` already exists, edit it locally rather than rerunning the configurator. Do not commit, send or screenshot the key.
+
+Review the non-secret settings in [.env.example](.env.example) and adjust the local `.env` for the account and browser you actually use:
 
 | Setting | Description |
 | --- | --- |
 | `DEEPSEEK_API_KEY` | Your key; `LLM_API_KEY` is also supported and takes precedence. |
-| `LLM_BASE_URL` / `LLM_MODEL` | Endpoint and a model ID available to your account. |
-| `LLM_THINKING` | DeepSeek-specific; usually leave blank for other providers. |
-| `LLM_JSON_MODE` | Request JSON output only if the endpoint supports it. |
-| `LLM_MAX_TOKENS` / `LLM_TIMEOUT_SECONDS` | Per-request output and timeout limits, not whole-task budgets. |
+| `LLM_BASE_URL` / `LLM_MODEL` | An HTTPS API base and a model ID available to your account. The adapter appends `/chat/completions`; include a provider's version path in the base if required. |
+| `LLM_THINKING` | `disabled` in the supplied DeepSeek configuration; leave blank to omit this provider-specific field for another compatible endpoint. |
+| `LLM_JSON_MODE` | `true` in the example; use it only if the endpoint supports JSON-object responses. |
+| `LLM_MAX_TOKENS` / `LLM_TIMEOUT_SECONDS` | Example defaults: 12000 output tokens and 90 seconds per request; these are not whole-task budgets. Planning has an additional internal output cap. |
 | `PLAYWRIGHT_CHANNEL` | Blank: Playwright Chromium; `msedge`: installed Edge. |
 | `PRICE_*` / `PRICE_CURRENCY` | Optional prices; without them, report tokens, not invented costs. |
 
-See [.env.example](.env.example). Historical tests used `deepseek-flash`; this is a recorded configuration, not a promise that every account supports it. Other providers may need option adjustments. Compatibility with the instructor's final model remains to be tested.
+Existing process environment variables override `.env`. The program reads `.env` from the directory where you launch it, not from an arbitrary source folder. `deepseek-flash` is the recorded development model, not a guarantee that every account supports that ID or that the instructor will use it. A different compatible provider may require different base/model/JSON/thinking settings. Do not place keys in the game specification or generated files.
 
-Environment check — no paid API call
+### Step 4 — check the prepared environment
 
-~~~powershell
-./.venv/Scripts/python.exe -m agent doctor
+~~~text
+python -m agent doctor
 ~~~
 
-`doctor` checks local configuration, dependencies and browser availability. **It does not verify key validity, balance or model-provider connectivity.**
+Before generation, confirm that the output shows `api_key_configured: true`, `playwright_installed: true` and a successful browser check. `doctor` does not make a paid API call. **It does not verify key validity, balance, quota, provider connectivity or full game-generation success.** A failed preflight should be fixed before the live run, not during it.
 
 ## 3. Generate and play
 
-~~~powershell
-./.venv/Scripts/python.exe -m agent game_design_prompt.md
+### Input file and working directory
+
+Run from the workspace root containing `agent/`, `requirements.txt` and this README. Put the supplied UTF-8 Markdown requirement at `game_design_prompt.md` in that root:
+
+~~~text
+PlayForge/
+  agent/
+    __main__.py
+  requirements.txt
+  .env                  Local configuration; never submit the key
+  game_design_prompt.md The input for this run
+  README.md
 ~~~
 
-**Planning, generation and repair consume API credits.** Defaults: 3 generation/repair rounds including the first version, 8 API attempts, and a 600-second task budget; each browser verification defaults to 60 seconds. Planning, recovery, formatting retries and transport retries all share the API-attempt cap.
+The repository's existing `game_design_prompt.md` is a **development sample**. For the live course task, use the instructor-provided file with that name and do not edit its requirements. Only that Markdown specification is the task input; do not feed independent acceptance JSON, reviewer answers, saved game implementations or the complete repository to the generation/planning/repair model.
 
-Example with an explicit specification and budget
+### Start the Agent
 
-~~~powershell
-./.venv/Scripts/python.exe -m agent examples/benchmark/sokoban.md --max-rounds 3 --max-calls 5 --max-seconds 360
+With the environment activated and the input in place, the documented course entry command is:
+
+~~~text
+python -m agent game_design_prompt.md
 ~~~
 
-Describe controls, initial state, legal/illegal actions, scoring or win/loss, restart behavior and technical constraints. Do not include keys or private data; you do not need to write a JSON plan.
+This is a real generation run and **consumes API credits**. It uses the current program defaults: 3 generation/repair rounds including the first version, 8 API attempts, a 600-second task budget and 60 seconds per browser verification. Planning, recovery, formatting retries and transport retries all share the attempt cap. These defaults must not be confused with a different internal evaluation budget.
 
-`--output` selects a new output directory and never overwrites existing results; `--headful` shows the test browser; `--strict-plan` stops after functional planning fails instead of generating a partial result.
+For local development/evaluation only, an explicit capped alternative is:
+
+~~~text
+python -m agent examples/benchmark/tic_tac_toe.md --output runs/dev_tictactoe_01 --max-rounds 3 --max-calls 5 --max-seconds 360 --test-timeout 60 --repair-mode auto --verify-repeats 1
+~~~
+
+Choose one command for the intended run; executing both starts two paid runs. The second command is not a claim that extra arguments, this budget or this sample are required/approved for the instructor's live test. Use a new output name if that directory already exists. API-attempt limits are not monetary caps.
+
+For your own development specifications, describe controls, initial state, legal/illegal actions, scoring or win/loss, restart behavior and technical constraints. You do not need to write a JSON plan. `--output` selects a new run directory, not a game file; existing outputs are protected. `--headful` shows automated browser checks; `--strict-plan` stops after failed functional planning instead of generating a partial artifact. Leave optional features off unless your evaluation configuration explicitly enables them.
 
 ### Reliability options
 
@@ -117,7 +197,9 @@ Example for stronger repeatability (generation is still paid; no hidden API allo
 
 Repetitions use fresh browser contexts and may take longer or expose intermittent failures; real-time scheduling is not guaranteed identical. Keep optional diagnosis off for the cheapest baseline. Compare features under the same model/spec/budget before claiming reliability improvements.
 
-Each run creates a new `runs/<run_id>/`
+### Find the output and start the game
+
+By default, each run creates a new `runs/<run_id>/` and prints its actual location. The placeholder `<run_id>` below must be replaced by that printed name:
 
 ~~~text
 game/          Generated game source
@@ -126,13 +208,15 @@ summary.json   Results and usage
 REPORT.md      Findings and manual checks
 ~~~
 
-Replace the placeholder with the printed run directory
+`summary.json` records status and usage; `REPORT.md` is the program's run summary, **not** the final course `report.pdf`. Verification evidence, fixed plans and candidate versions are in `traces/`. A fresh Git clone has no historical runs because `runs/` is ignored.
 
-~~~powershell
-./.venv/Scripts/python.exe -m agent serve "runs/<run_id>/game"
+After generation ends, start the selected game from the same workspace root:
+
+~~~text
+python -m agent serve "runs/<run_id>/game" --port 8000
 ~~~
 
-Open the [local game page](http://127.0.0.1:8000/). Serving and playing do not call the model; input does not consume API credits per frame. If occupied, add `--port 8001` and use that port. Stop with Ctrl+C.
+Open the [local game page](http://127.0.0.1:8000/), then use the generated game's displayed controls. The terminal server stays running while you play. Serving and playing do not call the model; no API request is made per key press or animation frame. If port 8000 is already occupied, choose `--port 8001` and open the matching address. Stop the server with Ctrl+C. Prefer this local server over opening `index.html` with a `file://` URL.
 
 Read `REPORT.md` and `summary.json`; opening a page or checking an exit code alone is not functional acceptance.
 
@@ -146,6 +230,25 @@ Read `REPORT.md` and `summary.json`; opening a page or checking an exit code alo
 | `unsupported_spec` | Outside the current scope; no silent substitution. |
 | `budget_exhausted` / `run_error` / `generation_failed` | Budget, execution or generation failure; inspect the report. |
 | `interrupted` | Interrupted; not a completed autonomous run. |
+
+### Course run and submission checklist
+
+The supplied Project 1 brief requires an unseen `game_design_prompt.md`, one documented Agent start command, autonomous development from an empty game directory, a game start command, and preserved generated source and execution traces. Its four required submission entries are:
+
+~~~text
+submission/
+  agent/       The group's Agent and installation/run README
+  game/        Complete game generated during the live slot, untouched
+  traces/      Complete record of that live run
+  report.pdf   The group's project report
+~~~
+
+- Complete the permitted environment setup, browser checks, model configuration and workspace preparation before the live run. After the Agent starts, do not manually edit the specification/Agent/game, install a missing dependency, correct a path, add a file or run a missing build step. The brief permits starting the Agent, starting the generated game and operating it during the demonstration.
+- Preserve `game/` and `traces/` in the state left by the Agent, including failures and recovery evidence; the brief requires them at the end of the group's slot. A launchable game or passed self-tests do not by themselves establish full acceptance.
+- **Current layout limitation:** the default command writes `runs/<run_id>/game` and `runs/<run_id>/traces`, not directly `submission/game` and `submission/traces`. `--output` changes the enclosing run directory. The separate `export-run` command below can assemble a package, but is not automatically executed by the live Agent. Confirm the final output layout and permission for any export/archival step with the instructor. Documentation does not make a manual post-run step autonomous or resolve a stricter direct-output requirement.
+- The export helper writes its own short `README.md` and `agent/README.md`; it does **not** copy this full repository guide. Verify the actual submitted installation instructions and their paths during the approved packaging rehearsal, rather than assuming a root README edit updates exported instructions.
+- All groups must use the instructor-announced model/API when provided. This project's DeepSeek setup and local budgets are development settings, not confirmation of the final assessment configuration. Verify them before the slot; do not silently substitute a model during a run.
+- Do not submit a prewritten game template as a live result, launch an existing coding agent to do the assessed work, alter frozen checks to force a pass, or publish credentials. The project brief, submission platform and latest instructor clarifications take precedence over internal examples.
 
 ## 4. Multi-game benchmark — paid
 
@@ -357,11 +460,17 @@ EXTENSION_PLAN.md     Implemented scope and deferred work
 
 This zero-API command copies the current agent, pinned requirements and exact `game/` / `traces/` into a new directory. It excludes local `.env`, dependencies and caches. `--report` must point to your existing PDF; omit it only for an incomplete draft package. The delivery manifest distinguishes current-agent and original-run versions. Inspect traces for private content before sharing.
 
-Exporting does not turn an old or assisted run into a valid autonomous course demonstration. Final live-run commands and course requirements still need confirmation.
+Run this from the workspace root; do not launch the package from inside its `agent/` subdirectory. The export's README explains that an approved specification must be supplied separately as `SPECIFICATION.md` for a new development run; the original live input file is not automatically included. To play an exported result without generating anything, use `python -m agent serve game` from the export root. The package has additional runtime/configuration/manifest files alongside the required directories; verify the final submission rules rather than assuming its layout is formally approved.
+
+Exporting does not turn an old or assisted run into a valid autonomous course demonstration. It is a separate post-run operation, not a remedy for missing autonomous outputs. It copies trace contents, which may include prompts, responses, generated code and private context: excluding `.env` and redacting a configured key do not make every trace safe to publish. This README-only update does not modify the helper's generated short instructions or the Agent's output behavior.
 
 - **Playwright missing**: install and run with the same `.venv` interpreter.
 - **Browser unavailable**: install Chromium, or set `PLAYWRIGHT_CHANNEL=msedge`, then run `doctor`.
+- **`No module named agent` / missing `.env` or input**: run from the workspace root containing `agent/` and `requirements.txt`; place the actual Markdown input there. Do not run from inside the package directory. Relative paths and `.env` are resolved from the working directory.
+- **An edited `.env` seems ignored**: existing process environment variables take precedence. Check the non-secret base/model/browser values with `doctor`; never print or paste the key to diagnose this.
+- **PowerShell activation blocked**: use Command Prompt activation or the explicit virtual-environment interpreter for development. Prepare the required command before the live run; do not make machine-wide policy changes as an emergency workaround.
 - **API 401/403, missing model or balance**: check your own provider account; `doctor` does not verify these. Never expose keys in screenshots.
+- **Provider rejects JSON or `thinking` options**: confirm the endpoint's supported settings, use a blank `LLM_THINKING` to omit that field for a non-DeepSeek provider, and configure JSON mode appropriately before rerunning. A failed call may already have consumed quota; preserve it and do not switch settings in the middle of a supposedly fixed evaluation.
 - **Output already exists**: choose a new `--output`; old results are protected.
 - **Page opens but checks fail**: inspect failed steps; rules, test expectations or interaction strategy may be wrong. Preserve failures.
 - **Empty cost**: pricing was not configured, not free. Failed/time-out requests may be billed; provider billing is authoritative.
