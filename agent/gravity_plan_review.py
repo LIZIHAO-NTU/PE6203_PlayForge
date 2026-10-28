@@ -104,6 +104,142 @@ def gravity_reference_paths(original_spec, max_states=100000):
     return found
 
 
+def compile_explicit_gravity_plan(original_spec):
+    """Compile a small rule-complete plan when model drafts remain invalid.
+
+    Applies only to a fully specified, bounded drop-token game. Every expected
+    state and sequence is derived from the original spec's explicit rules.
+    The normal verifier and independent acceptance still decide whether the
+    generated game works.
+    """
+    size = _rules(original_spec)
+    if size is None:
+        return None
+    width, height = size
+    lower = re.sub(r"[*_`]", "", original_spec).lower()
+    interface = (f"drop-0 through drop-{width - 1}", "restart", "turn", "moves",
+                 "status", "cell-row-column", "offline", "full column",
+                 "ignored", "win takes precedence over a draw")
+    if not all(fragment in lower for fragment in interface):
+        return None
+    paths = gravity_reference_paths(original_spec)
+    if not {"horizontal", "vertical", "diagonal", "draw"} <= paths.keys():
+        return None
+    if width * height + 6 > 18:
+        return None
+
+    def click(col):
+        return {"action": "click", "selector": f"#drop-{col}"}
+
+    def claim(selector, value, source="text"):
+        return {"action": "assert", "source": source, "selector": selector,
+                "op": "eq", "value": value}
+
+    def sequence(kind):
+        return [click(col) for col in paths[kind]["columns"]]
+
+    def test(tid, requirements, description, steps):
+        return {"id": tid, "requirement_ids": requirements,
+                "description": description, "steps": steps}
+
+    bottom = f"#cell-{height - 1}-0"
+    final_turn = "A" if width * height % 2 else "B"
+    turn_after_column = "A" if height % 2 == 0 else "B"
+    horizontal = paths["horizontal"]
+    tests = [
+        test("T1", ["R1", "R7"], "Fresh board, count and turn",
+             [claim("[id^='cell-']", width * height, "count"),
+              claim(bottom, ""), claim(f"#cell-0-{width - 1}", ""),
+              claim("#turn", "A"), claim("#moves", "0"), claim("#status", "Playing"),
+              {"action": "assert", "source": "state", "path": "moves",
+               "op": "eq", "value": 0}]),
+        test("T2", ["R2", "R7"], "A legal drop follows gravity and passes the turn",
+             [click(0), claim(bottom, "A"), claim("#moves", "1"),
+              claim("#turn", "B"), claim("#status", "Playing")]),
+        test("T3", ["R3"], "A full column ignores further clicks",
+             [click(0) for _ in range(height)] +
+             [claim("#moves", str(height)), click(0),
+              claim("#moves", str(height)), claim("#turn", turn_after_column),
+              claim("#status", "Playing"), claim("#drop-0", True, "enabled")]),
+        test("T4", ["R4", "R6", "R7"], "Horizontal win locks further drops",
+             sequence("horizontal") +
+             [claim("#status", horizontal["result"]),
+              claim("#turn", horizontal["result"][-1]),
+              claim("#moves", str(len(horizontal["columns"]))),
+              click(0), claim("#status", horizontal["result"]),
+              claim("#moves", str(len(horizontal["columns"])))]),
+        test("T5", ["R4"], "Vertical win",
+             sequence("vertical") +
+             [claim("#status", paths["vertical"]["result"]),
+              claim("#moves", str(len(paths["vertical"]["columns"])))]),
+        test("T6", ["R4"], "Diagonal win",
+             sequence("diagonal") +
+             [claim("#status", paths["diagonal"]["result"]),
+              claim("#moves", str(len(paths["diagonal"]["columns"])))]),
+        test("T7", ["R5", "R6", "R7"], "A full non-winning board draws and locks input",
+             sequence("draw") +
+             [claim("#status", "Draw"), claim("#moves", str(width * height)),
+              claim("#turn", final_turn), click(0),
+              claim("#status", "Draw"), claim("#moves", str(width * height))]),
+        test("T8", ["R8"], "Restart during play allows an immediate new drop",
+             [click(0), click_restart(), claim(bottom, ""),
+              claim("#turn", "A"), claim("#moves", "0"), claim("#status", "Playing"),
+              click(0), claim(bottom, "A"), claim("#moves", "1")]),
+        test("T9", ["R8"], "Restart after win allows an immediate new drop",
+             sequence("horizontal") +
+             [click_restart(), claim(bottom, ""), claim("#turn", "A"),
+              claim("#moves", "0"), claim("#status", "Playing"),
+              click(0), claim(bottom, "A")]),
+        test("T10", ["R8"], "Restart after draw allows an immediate new drop",
+             sequence("draw") +
+             [click_restart(), claim("#turn", "A"), claim("#moves", "0"),
+              claim("#status", "Playing"), click(0), claim(bottom, "A")]),
+    ]
+    requirements = [
+        {"id": "R1", "text": f"Initial {width} by {height} board is empty; A moves first, count 0 and Playing status.",
+         "verification": "automated", "priority": "core"},
+        {"id": "R2", "text": "A valid column click places one token in its lowest empty cell and advances the legal-move count and turn.",
+         "verification": "automated", "priority": "core"},
+        {"id": "R3", "text": "A full column remains clickable but further drops change no game state.",
+         "verification": "automated", "priority": "core"},
+        {"id": "R4", "text": "Three contiguous horizontal, vertical or diagonal tokens win immediately for the mover.",
+         "verification": "automated", "priority": "core"},
+        {"id": "R5", "text": "A full board without a winning line shows exactly Draw.",
+         "verification": "automated", "priority": "core"},
+        {"id": "R6", "text": "After any ending, column clicks are ignored and the finished state remains unchanged.",
+         "verification": "automated", "priority": "core"},
+        {"id": "R7", "text": "The active turn shows the next player; a finished game retains the final mover.",
+         "verification": "automated", "priority": "core"},
+        {"id": "R8", "text": "Restart clears the board, restores A, count 0 and Playing, and permits the next drop immediately.",
+         "verification": "automated", "priority": "core"},
+        {"id": "R9", "text": "Board, controls and readouts are readable and usable at normal desktop size.",
+         "verification": "manual", "priority": "visual"},
+        {"id": "R10", "text": "The page works offline without a server, network or external assets; Restart does not reload the page.",
+         "verification": "manual", "priority": "core"},
+        {"id": "R11", "text": "On the final cell, a winning line takes precedence over a draw.",
+         "verification": "manual", "priority": "core"},
+    ]
+    heading = re.search(r"(?m)^#\s+(.+)$", original_spec)
+    title = heading.group(1).strip()[:200] if heading else "Explicit gravity game"
+    return {"supported": True, "reason": "", "title": title,
+            "development_plan": ["Build an offline HTML/CSS/JS drop-token game from the original specification.",
+                                 "Implement gravity, alternating turns, line wins, draw and Restart.",
+                                 "Expose the required visible cells, controls and read-only state hook."],
+            "state_contract": {"turn": "displayed turn A or B",
+                               "moves": "number of legal drops so far",
+                               "status": "status shown to player"},
+            "requirements": requirements, "tests": tests,
+            "manual_checks": [
+                {"requirement_id": "R9", "instruction": "At desktop size confirm board, drop controls, turn, count, status and Restart are readable, aligned and clickable."},
+                {"requirement_id": "R10", "instruction": "Disconnect network, open the page locally, and confirm play and Restart work without a page reload or remote resources."},
+                {"requirement_id": "R11", "instruction": "If the last empty cell also creates a line of three, confirm Winner for the mover is shown rather than Draw."},
+            ]}
+
+
+def click_restart():
+    return {"action": "click", "selector": "#restart"}
+
+
 def gravity_plan_conflicts(plan, original_spec):
     """Return evidence of contradictions; never edit a draft or infer game correctness."""
     size = _rules(original_spec)
@@ -168,6 +304,13 @@ def gravity_plan_conflicts(plan, original_spec):
                 description = plan.get("state_contract", {}).get(path, "")
                 if isinstance(description, str):
                     label = description.lower()
+                    mapped_cell = (re.search(r"(?:cell text for|maps to|=|->)\s+#?cell-(\d+)-(\d+)\b",
+                                             description, re.I)
+                                   if re.fullmatch(r"board\.\d+", path or "") else None)
+                    if mapped_cell:
+                        mapped_row, mapped_col = map(int, mapped_cell.groups())
+                        if 0 <= mapped_row < height and 0 <= mapped_col < width:
+                            actual = board[mapped_row][mapped_col]
                     if path == "moves" and (
                             ("legal" in label or "valid" in label)
                             and ("drop" in label or "move" in label or "count" in label)):

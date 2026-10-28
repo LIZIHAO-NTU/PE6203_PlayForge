@@ -3,8 +3,10 @@ from copy import deepcopy
 import json
 import unittest
 
-from agent.gravity_plan_review import (gravity_plan_conflicts, gravity_reference_paths,
+from agent.gravity_plan_review import (compile_explicit_gravity_plan, gravity_plan_conflicts,
+                                       gravity_reference_paths,
                                        repair_explicit_gravity_draw_plan)
+from agent.contracts import validate_plan
 from agent.runner import run
 from test_mvp import TempTest, FakeClient, config, example_bundle, example_plan, verifier_result
 
@@ -39,6 +41,22 @@ def assertion(selector, value, op="eq"):
 
 
 class GravityPlanReviewTests(unittest.TestCase):
+    def test_compiled_fallback_has_complete_reachable_rule_tests(self):
+        plan = compile_explicit_gravity_plan(FOUR_COLUMN_SPEC)
+        self.assertIsNotNone(plan)
+        self.assertEqual(validate_plan(plan), plan)
+        self.assertEqual(gravity_plan_conflicts(plan, FOUR_COLUMN_SPEC), [])
+        automated = {r["id"] for r in plan["requirements"] if r["verification"] == "automated"}
+        covered = {rid for test in plan["tests"] for rid in test["requirement_ids"]}
+        self.assertEqual(automated, covered)
+        self.assertTrue(any(step.get("value") == "Draw" for test in plan["tests"]
+                            for step in test["steps"]))
+        self.assertIsNone(compile_explicit_gravity_plan("An unspecified board game."))
+        self.assertIsNone(compile_explicit_gravity_plan(
+            FOUR_COLUMN_SPEC.replace("drop-0 through drop-3", "unnamed controls")))
+        self.assertEqual(compile_explicit_gravity_plan("# Line Drop\n" + FOUR_COLUMN_SPEC)["title"],
+                         "Line Drop")
+
     def test_reference_paths_are_derived_from_explicit_rules(self):
         paths = gravity_reference_paths(FOUR_COLUMN_SPEC)
         self.assertEqual(len(paths["draw"]["columns"]), 12)
@@ -148,6 +166,17 @@ class GravityPlanReviewTests(unittest.TestCase):
         draft["tests"][0]["steps"][0]["value"] = 7
         self.assertEqual(gravity_plan_conflicts(draft, FOUR_COLUMN_SPEC), [])
 
+    def test_declared_cell_mapping_catches_wrong_board_index_expectation(self):
+        draft = {"state_contract": {"board.0": "string: cell text for cell-0-0"},
+                 "tests": [{"id": "T3", "steps": clicks(3, 3, 3) +
+                            [{"action": "assert", "source": "state", "path": "board.0",
+                              "op": "eq", "value": "A"}]}]}
+        conflicts = gravity_plan_conflicts(draft, FOUR_COLUMN_SPEC)
+        self.assertEqual(len(conflicts), 1)
+        self.assertEqual(conflicts[0]["actual_from_spec"], "")
+        draft["tests"][0]["steps"][-1]["value"] = ""
+        self.assertEqual(gravity_plan_conflicts(draft, FOUR_COLUMN_SPEC), [])
+
     def test_ambiguous_state_move_field_is_not_assumed_legal_count(self):
         draft = {"state_contract": {"moves": "animation frame count"},
                  "tests": [{"id": "T", "steps": clicks(0) +
@@ -181,7 +210,7 @@ class GravityRunnerTests(TempTest):
         out = self.root / "run"
         code = run(config(), spec_path, out, client_factory=Client,
                    preflight_fn=lambda **kw: {"ok": True},
-                   verifier=lambda *a, **kw: verifier_result(True), max_calls=5, strict_plan=True)
+                   verifier=lambda *a, **kw: verifier_result(True), max_calls=6, strict_plan=True)
         summary = json.loads((out / "summary.json").read_text(encoding="utf-8"))
         self.assertEqual(code, 0, summary)
         self.assertEqual(stages, ["plan", "plan", "plan", "code_1"])
@@ -190,7 +219,8 @@ class GravityRunnerTests(TempTest):
 
     def test_exhausted_invalid_plans_are_reported_as_review_not_runtime_error(self):
         spec_path = self.root / "spec.md"
-        spec_path.write_text(FOUR_COLUMN_SPEC, encoding="utf-8")
+        spec_path.write_text(FOUR_COLUMN_SPEC.replace("drop-0 through drop-3", "unnamed controls"),
+                             encoding="utf-8")
         invalid = example_plan()
         invalid["requirements"].append({"id": "R2", "text": "Counter is visible", "verification": "automated"})
         stages = []
@@ -203,12 +233,68 @@ class GravityRunnerTests(TempTest):
 
         out = self.root / "run"
         code = run(config(), spec_path, out, client_factory=Client,
-                   preflight_fn=lambda **kw: {"ok": True}, max_calls=5, strict_plan=True)
+                   preflight_fn=lambda **kw: {"ok": True}, max_calls=3, strict_plan=True)
         summary = json.loads((out / "summary.json").read_text(encoding="utf-8"))
         self.assertEqual(code, 2)
-        self.assertEqual(stages, ["plan", "plan", "plan"])
+        self.assertEqual(stages, ["plan", "plan"])
         self.assertEqual(summary["status"], "plan_review_required")
         self.assertFalse((out / "game").exists())
+
+    def test_compiler_reserves_generation_budget_after_api_retry(self):
+        spec_path = self.root / "spec.md"
+        spec_path.write_text(FOUR_COLUMN_SPEC, encoding="utf-8")
+        invalid = example_plan()
+        invalid["requirements"].append({"id": "R2", "text": "Counter is visible", "verification": "automated"})
+        stages = []
+
+        class Client(FakeClient):
+            def ask_json(self, stage, system, prompt):
+                self.calls += 2 if stage == "plan" and stages else 1
+                stages.append(stage)
+                return deepcopy(invalid) if stage == "plan" else example_bundle()
+
+        def pass_compiled_plan(game, plan_path, *args, **kwargs):
+            plan = json.loads(plan_path.read_text(encoding="utf-8"))
+            return {"ok": True, "smoke": {"passed": True},
+                    "tests": [{"id": test["id"], "passed": True} for test in plan["tests"]],
+                    "runtime_errors": [], "infrastructure_error": None}
+
+        out = self.root / "run"
+        code = run(config(), spec_path, out, client_factory=Client,
+                   preflight_fn=lambda **kw: {"ok": True},
+                   verifier=pass_compiled_plan, max_calls=5, strict_plan=True)
+        summary = json.loads((out / "summary.json").read_text(encoding="utf-8"))
+        self.assertEqual(code, 0, summary)
+        self.assertEqual(stages, ["plan", "plan", "code_1"])
+        self.assertEqual(summary["planning_origin"], "explicit_rule_compiler")
+
+    def test_rule_compiler_recovers_after_three_invalid_drafts(self):
+        spec_path = self.root / "spec.md"
+        spec_path.write_text(FOUR_COLUMN_SPEC, encoding="utf-8")
+        invalid = example_plan()
+        invalid["requirements"].append({"id": "R2", "text": "Counter is visible", "verification": "automated"})
+        stages = []
+
+        class Client(FakeClient):
+            def ask_json(self, stage, system, prompt):
+                self.calls += 1
+                stages.append(stage)
+                return deepcopy(invalid) if stage == "plan" else example_bundle()
+
+        out = self.root / "run"
+        def pass_compiled_plan(game, plan_path, *args, **kwargs):
+            plan = json.loads(plan_path.read_text(encoding="utf-8"))
+            return {"ok": True, "smoke": {"passed": True},
+                    "tests": [{"id": test["id"], "passed": True} for test in plan["tests"]],
+                    "runtime_errors": [], "infrastructure_error": None}
+        code = run(config(), spec_path, out, client_factory=Client,
+                   preflight_fn=lambda **kw: {"ok": True},
+                   verifier=pass_compiled_plan, max_calls=6, strict_plan=True)
+        summary = json.loads((out / "summary.json").read_text(encoding="utf-8"))
+        self.assertEqual(code, 0, summary)
+        self.assertEqual(stages, ["plan", "plan", "plan", "code_1"])
+        self.assertEqual(summary["planning_origin"], "explicit_rule_compiler")
+        self.assertTrue((out / "traces/rejected_model_plan.json").is_file())
 
     def test_last_attempt_rebuilds_conflicting_sequences_without_losing_requirements(self):
         spec_path = self.root / "spec.md"
@@ -230,7 +316,7 @@ class GravityRunnerTests(TempTest):
         out = self.root / "run"
         code = run(config(), spec_path, out, client_factory=Client,
                    preflight_fn=lambda **kw: {"ok": True},
-                   verifier=lambda *a, **kw: verifier_result(True), max_calls=5, strict_plan=True)
+                   verifier=lambda *a, **kw: verifier_result(True), max_calls=6, strict_plan=True)
         self.assertEqual(code, 0)
         self.assertEqual(len(prompts), 3)
         self.assertNotIn("tests", prompts[2]["previous_plan"])

@@ -22,7 +22,8 @@ from .diagnostics import route_failure, validate_diagnosis, validate_blocked_rep
 from .evidence import runtime_metadata
 from .lessons import load_lessons, select_hints, record_recovery
 from .plan_review import EXECUTION_CONTRACT, PlanReviewError, inspect_plan, validate_audit, failure_fingerprint
-from .gravity_plan_review import (gravity_plan_conflicts, gravity_reference_paths,
+from .gravity_plan_review import (compile_explicit_gravity_plan, gravity_plan_conflicts,
+                                  gravity_reference_paths,
                                   repair_explicit_gravity_draw_plan,
                                   supports_explicit_gravity_review)
 
@@ -151,6 +152,9 @@ def run(config, spec_path, output, max_rounds=3, max_calls=8, max_seconds=600,
         plan_details = None
         raw_plan = None
         explicit_plan_conflict = False
+        plan_valid = False
+        use_compiled_fallback = False
+        compiled_candidate = compile_explicit_gravity_plan(spec)
         verified_gravity_scenarios = gravity_reference_paths(spec)
         # Explicit gravity plans have a deterministic pre-freeze review that may
         # reveal a second error after schema validation. Allow one extra draft
@@ -197,6 +201,7 @@ def run(config, spec_path, output, max_rounds=3, max_calls=8, max_seconds=600,
                          f"expected {item['expected']!r}, explicit rules yield {item['actual_from_spec']!r}")
                         for item in gravity_conflicts[:8])
                     raise ValueError("Explicit gravity plan conflicts: " + details)
+                plan_valid = True
                 break
             except (ValueError, TypeError, KeyError) as error:
                 explicit_plan_conflict = explicit_plan_conflict or str(error).startswith(
@@ -204,16 +209,36 @@ def run(config, spec_path, output, max_rounds=3, max_calls=8, max_seconds=600,
                 plan_error = str(error)
                 plan_details = validation_feedback(error, raw_plan)
                 trace.event("plan_validation_failed", error=plan_error, details=plan_details)
-        else:
-            if explicit_plan_conflict:
+                # API retries count against the same cap. Reserve a generation
+                # call and, when possible, one repair call before retrying a
+                # plan that a bounded rule compiler can already provide.
+                if (max_calls >= 4 and compiled_candidate is not None
+                        and client.calls >= max_calls - 3):
+                    use_compiled_fallback = True
+                    break
+        if not plan_valid:
+            compiled = (compiled_candidate if client.calls < max_calls and
+                        (use_compiled_fallback or plan_attempt_limit >= 3) else None)
+            if compiled is not None:
+                compiled = validate_plan(compiled)
+                if gravity_plan_conflicts(compiled, spec):
+                    raise PlanReviewError("Rule-compiled plan conflicted with the original specification")
+                trace.save("rejected_model_plan.json", raw_plan)
+                trace.event("rule_plan_compiled", reason="Model drafts remained invalid",
+                            prior_error=plan_error)
+                summary.update(planning_origin="explicit_rule_compiler",
+                               planning_status="valid", model_plan_error=plan_error)
+                plan = compiled
+            elif explicit_plan_conflict:
                 raise PlanReviewError("Could not resolve explicit gravity plan conflicts: " + str(plan_error))
-            if strict_plan or not isinstance(raw_plan, dict) or raw_plan.get("supported") is not True:
+            elif strict_plan or not isinstance(raw_plan, dict) or raw_plan.get("supported") is not True:
                 raise PlanReviewError("Could not produce a valid test plan: " + str(plan_error))
-            # Keep the original requirements. Only our confidence/acceptance scope degrades.
-            plan = validate_plan(startup_only_plan())
-            summary.update(planning_status="failed_startup_only", planning_error=plan_error)
-            trace.event("planning_degraded", error=plan_error,
-                        decision="Generate original-spec game; startup-only checks are NOT functional acceptance")
+            else:
+                # Keep the original requirements. Only our confidence/acceptance scope degrades.
+                plan = validate_plan(startup_only_plan())
+                summary.update(planning_status="failed_startup_only", planning_error=plan_error)
+                trace.event("planning_degraded", error=plan_error,
+                            decision="Generate original-spec game; startup-only checks are NOT functional acceptance")
         if summary["planning_status"] == "pending":
             summary["planning_status"] = "valid" if plan["supported"] else "unsupported"
         summary["plan_review"] = inspect_plan(plan, spec)
