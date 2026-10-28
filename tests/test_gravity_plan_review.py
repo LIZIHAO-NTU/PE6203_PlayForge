@@ -3,7 +3,8 @@ from copy import deepcopy
 import json
 import unittest
 
-from agent.gravity_plan_review import gravity_plan_conflicts, repair_explicit_gravity_draw_plan
+from agent.gravity_plan_review import (gravity_plan_conflicts, gravity_reference_paths,
+                                       repair_explicit_gravity_draw_plan)
 from agent.runner import run
 from test_mvp import TempTest, FakeClient, config, example_bundle, example_plan, verifier_result
 
@@ -38,6 +39,16 @@ def assertion(selector, value, op="eq"):
 
 
 class GravityPlanReviewTests(unittest.TestCase):
+    def test_reference_paths_are_derived_from_explicit_rules(self):
+        paths = gravity_reference_paths(FOUR_COLUMN_SPEC)
+        self.assertEqual(len(paths["draw"]["columns"]), 12)
+        self.assertEqual(paths["draw"]["result"], "Draw")
+        for kind in ("horizontal", "vertical", "diagonal"):
+            self.assertIn(kind, paths)
+            self.assertIn(paths[kind]["result"], {"Winner: A", "Winner: B"})
+            self.assertLessEqual(len(paths[kind]["columns"]), 12)
+        self.assertEqual(gravity_reference_paths("A board game with unclear rules."), {})
+
     def test_alternating_stack_rejects_wrong_top_token(self):
         draft = {"tests": [{"id": "T1", "setup_steps": clicks(0, 0, 0),
                             "steps": [assertion("#cell-0-0", "B")]}]}
@@ -225,6 +236,7 @@ class GravityRunnerTests(TempTest):
         self.assertNotIn("tests", prompts[2]["previous_plan"])
         self.assertEqual(prompts[2]["previous_plan"]["requirements"], bad["requirements"])
         self.assertIn("rebuild", prompts[2]["planning_recovery_strategy"].lower())
+        self.assertEqual(prompts[0]["verified_gravity_scenarios"]["draw"]["result"], "Draw")
 
     def test_pure_draw_path_is_corrected_before_freeze(self):
         spec_path = self.root / "spec.md"

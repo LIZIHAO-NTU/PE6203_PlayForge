@@ -4,6 +4,7 @@ Only the original requirement and the model's draft plan are inputs. Unknown
 rules, actions and observations are left for human or model review.
 """
 import re
+from collections import deque
 from copy import deepcopy
 from functools import lru_cache
 
@@ -48,6 +49,59 @@ def _winner(board, row, col, token):
         if count >= 3:
             return True
     return False
+
+
+def gravity_reference_paths(original_spec, max_states=100000):
+    """Bounded, rule-derived examples for planning; never reads a game or tests.
+
+    These are candidate input traces, not acceptance verdicts. If the exact
+    rules cannot be recognized or a search bound is reached, omit that case.
+    """
+    size = _rules(original_spec)
+    if size is None:
+        return {}
+    width, height = size
+    if width * height > 16:
+        return {}
+    names = ("horizontal", "vertical", "diagonal", "diagonal")
+    directions = ((0, 1), (1, 0), (1, 1), (1, -1))
+    found = {}
+    empty = ("",) * (width * height)
+    queue = deque([(empty, "A", ())])
+    seen = {empty}
+    checked = 0
+    while queue and len(found) < 3 and checked < max_states:
+        cells, turn, path = queue.popleft()
+        checked += 1
+        for col in range(width):
+            row = next((r for r in range(height - 1, -1, -1)
+                        if not cells[r * width + col]), None)
+            if row is None:
+                continue
+            next_cells = list(cells)
+            next_cells[row * width + col] = turn
+            board = [next_cells[r * width:(r + 1) * width] for r in range(height)]
+            next_path = path + (col,)
+            if _winner(board, row, col, turn):
+                for name, (dr, dc) in zip(names, directions):
+                    count = 1
+                    for sign in (-1, 1):
+                        y, x = row + sign * dr, col + sign * dc
+                        while 0 <= y < height and 0 <= x < width and board[y][x] == turn:
+                            count += 1
+                            y += sign * dr
+                            x += sign * dc
+                    if count >= 3 and name not in found:
+                        found[name] = {"columns": list(next_path), "result": f"Winner: {turn}"}
+                continue
+            state = tuple(next_cells)
+            if state not in seen:
+                seen.add(state)
+                queue.append((state, "B" if turn == "A" else "A", next_path))
+    draw = _draw_path(width, height, max_states=max_states)
+    if draw is not None:
+        found["draw"] = {"columns": list(draw), "result": "Draw"}
+    return found
 
 
 def gravity_plan_conflicts(plan, original_spec):

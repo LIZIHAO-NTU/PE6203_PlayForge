@@ -22,7 +22,8 @@ from .diagnostics import route_failure, validate_diagnosis, validate_blocked_rep
 from .evidence import runtime_metadata
 from .lessons import load_lessons, select_hints, record_recovery
 from .plan_review import EXECUTION_CONTRACT, PlanReviewError, inspect_plan, validate_audit, failure_fingerprint
-from .gravity_plan_review import (gravity_plan_conflicts, repair_explicit_gravity_draw_plan,
+from .gravity_plan_review import (gravity_plan_conflicts, gravity_reference_paths,
+                                  repair_explicit_gravity_draw_plan,
                                   supports_explicit_gravity_review)
 
 
@@ -150,6 +151,7 @@ def run(config, spec_path, output, max_rounds=3, max_calls=8, max_seconds=600,
         plan_details = None
         raw_plan = None
         explicit_plan_conflict = False
+        verified_gravity_scenarios = gravity_reference_paths(spec)
         # Explicit gravity plans have a deterministic pre-freeze review that may
         # reveal a second error after schema validation. Allow one extra draft
         # within the shared call budget; other tasks keep their established flow.
@@ -165,6 +167,7 @@ def run(config, spec_path, output, max_rounds=3, max_calls=8, max_seconds=600,
                 previous_plan = {key: value for key, value in previous_plan.items() if key != "tests"}
             prompt = json.dumps({"original_spec": spec, "validation_feedback": plan_error,
                                  "validation_details": plan_details,
+                                 "verified_gravity_scenarios": verified_gravity_scenarios or None,
                                  "previous_plan": previous_plan,
                                  "planning_recovery_strategy": (
                                      "Rebuild test input sequences from the original rules and the initial state; "

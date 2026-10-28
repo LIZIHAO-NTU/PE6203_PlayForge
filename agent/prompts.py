@@ -55,6 +55,11 @@ Also label priority: core (mandatory rules/controls/technical constraints), seco
 Do not label a mandatory gameplay rule visual/secondary to make passing easier.
 Every automated requirement must have a related test with an assertion.
 Tests must refer to the original specification's expected behavior, not implementation guesses.
+When verified_gravity_scenarios is present, its column sequences were computed
+only from the original explicit drop/win/draw rules. Use a relevant sequence
+to ground a terminal test, with each test still starting from a fresh page.
+Do not copy these sequences into the player-facing game or claim they prove
+an implementation correct. Keep every automated requirement covered by a test.
 For each test include evidence: {"spec_quote":"short verbatim fragment of the original spec",
 "expected_basis":"brief observable outcome and, if needed, a short arithmetic/state ledger"}.
 Do not add expected_observations unless the optional structured-expectations policy is
