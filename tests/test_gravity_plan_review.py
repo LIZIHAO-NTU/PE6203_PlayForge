@@ -3,7 +3,7 @@ from copy import deepcopy
 import json
 import unittest
 
-from agent.gravity_plan_review import gravity_plan_conflicts
+from agent.gravity_plan_review import gravity_plan_conflicts, repair_explicit_gravity_draw_plan
 from agent.runner import run
 from test_mvp import TempTest, FakeClient, config, example_bundle, example_plan, verifier_result
 
@@ -23,6 +23,9 @@ and returns the turn to A, move count to 0, status to Playing.
 Controls have IDs drop-0 through drop-2 and restart. Cells have IDs
 cell-ROW-COLUMN. Text readouts have IDs turn, moves, status.
 """
+FOUR_COLUMN_SPEC = (SPEC.replace("3 columns and 3 rows", "4 columns and 3 rows")
+                    .replace("columns 0–2", "columns 0–3")
+                    .replace("drop-0 through drop-2", "drop-0 through drop-3"))
 
 
 def clicks(*columns):
@@ -90,8 +93,56 @@ class GravityPlanReviewTests(unittest.TestCase):
                             + [assertion("#status", "Winner: A")]}]}
         self.assertEqual(gravity_plan_conflicts(draft, SPEC), [])
 
+    def test_wrong_draw_path_is_replaced_only_before_freeze(self):
+        draft = {"requirements": [{"id": "RDraw", "verification": "automated",
+                                   "text": "A full board without a winning line must show Draw."}],
+                 "tests": [{"id": "TDraw", "requirement_ids": ["RDraw"],
+                            "steps": clicks(0, 1, 0, 1, 1, 0, 1, 0, 2, 3, 2, 3)
+                            + [assertion("#moves", "12"), assertion("#status", "Draw")]}]}
+        original = deepcopy(draft)
+        corrected, changes = repair_explicit_gravity_draw_plan(draft, FOUR_COLUMN_SPEC)
+        self.assertEqual(draft, original)
+        self.assertEqual(len(changes), 1)
+        self.assertEqual(gravity_plan_conflicts(corrected, FOUR_COLUMN_SPEC), [])
+        self.assertEqual(len([step for step in corrected["tests"][0]["steps"]
+                              if step["action"] == "click"]), 12)
+
+    def test_draw_repair_abstains_on_interleaved_assertions(self):
+        draft = {"tests": [{"id": "TDraw", "steps": clicks(0, 1)
+                            + [assertion("#cell-2-0", "A")]
+                            + clicks(0, 1, 1, 0, 1, 0, 2, 3, 2, 3)
+                            + [assertion("#status", "Draw")]}]}
+        self.assertEqual(repair_explicit_gravity_draw_plan(draft, FOUR_COLUMN_SPEC),
+                         (draft, []))
+
 
 class GravityRunnerTests(TempTest):
+    def test_pure_draw_path_is_corrected_before_freeze(self):
+        spec_path = self.root / "spec.md"
+        spec_path.write_text(FOUR_COLUMN_SPEC, encoding="utf-8")
+        bad = example_plan()
+        bad["requirements"][0]["text"] = "A full board without a winning line must show Draw."
+        bad["tests"][0]["steps"] = (clicks(0, 1, 0, 1, 1, 0, 1, 0, 2, 3, 2, 3)
+                                     + [assertion("#moves", "12"), assertion("#status", "Draw")])
+        stages = []
+
+        class Client(FakeClient):
+            def ask_json(self, stage, system, prompt):
+                self.calls += 1
+                stages.append(stage)
+                return deepcopy(bad) if stage == "plan" else example_bundle()
+
+        out = self.root / "run"
+        code = run(config(), spec_path, out, client_factory=Client,
+                   preflight_fn=lambda **kw: {"ok": True},
+                   verifier=lambda *a, **kw: verifier_result(True), max_calls=3)
+        self.assertEqual(code, 0)
+        self.assertEqual(stages, ["plan", "code_1"])
+        self.assertTrue((out / "traces/draft_gravity_plan.json").is_file())
+        self.assertTrue((out / "traces/gravity_plan_corrections.json").is_file())
+        frozen = json.loads((out / "traces/plan.json").read_text(encoding="utf-8"))
+        self.assertEqual(gravity_plan_conflicts(frozen, FOUR_COLUMN_SPEC), [])
+
     def test_conflict_is_returned_to_planner_before_code_exists(self):
         spec_path = self.root / "spec.md"
         spec_path.write_text(SPEC, encoding="utf-8")

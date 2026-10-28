@@ -4,6 +4,8 @@ Only the original requirement and the model's draft plan are inputs. Unknown
 rules, actions and observations are left for human or model review.
 """
 import re
+from copy import deepcopy
+from functools import lru_cache
 
 from .contracts import compare, test_steps
 
@@ -117,3 +119,99 @@ def gravity_plan_conflicts(plan, original_spec):
                               "kind": "missing_gravity_draw_coverage",
                               "message": "The automated draw requirement needs a reachable exact Draw assertion in a fresh-page test."})
     return conflicts
+
+
+def _draw_path(width, height, max_states=100000):
+    """Find a legal no-win full-board path using the stated rules alone."""
+    if width * height > 16:
+        return None
+    visited = 0
+
+    @lru_cache(maxsize=None)
+    def search(cells, turn):
+        nonlocal visited
+        visited += 1
+        if visited > max_states:
+            return None
+        if all(cells):
+            return ()
+        # Reverse ordering is arbitrary; it is independent of any held-out plan.
+        for col in range(width - 1, -1, -1):
+            row = next((r for r in range(height - 1, -1, -1)
+                        if not cells[r * width + col]), None)
+            if row is None:
+                continue
+            next_cells = list(cells)
+            next_cells[row * width + col] = turn
+            board = [next_cells[r * width:(r + 1) * width] for r in range(height)]
+            if _winner(board, row, col, turn):
+                continue
+            tail = search(tuple(next_cells), "B" if turn == "A" else "A")
+            if tail is not None:
+                return (col,) + tail
+        return None
+
+    return search(("",) * (width * height), "A")
+
+
+def _is_draw_sequence(columns, width, height):
+    board = [["" for _ in range(width)] for _ in range(height)]
+    turn = "A"
+    for col in columns:
+        row = next((r for r in range(height - 1, -1, -1) if not board[r][col]), None)
+        if row is None:
+            return False
+        board[row][col] = turn
+        if _winner(board, row, col, turn):
+            return False
+        turn = "B" if turn == "A" else "A"
+    return len(columns) == width * height
+
+
+def repair_explicit_gravity_draw_plan(plan, original_spec):
+    """Replace only an invalid pure draw path before the plan is frozen.
+
+    Assertions, requirement IDs and original draft are preserved. Any mixed or
+    ambiguous scenario abstains and remains subject to planner review.
+    """
+    size = _rules(original_spec)
+    if size is None or not isinstance(plan, dict):
+        return plan, []
+    width, height = size
+    corrected = deepcopy(plan)
+    changes = []
+    safe_path = None
+    for test in corrected.get("tests", []):
+        steps = test.get("setup_steps", []) + test.get("steps", [])
+        actions = [step.get("action") for step in steps]
+        clicks = [step for step in steps if step.get("action") == "click"]
+        if (len(clicks) != width * height or
+                any(action not in {"click", "assert"} for action in actions) or
+                actions != ["click"] * len(clicks) + ["assert"] * (len(steps) - len(clicks)) or
+                any(step.get("selector") not in {f"#drop-{col}" for col in range(width)}
+                    for step in clicks) or
+                any(step.get("source") != "text" or step.get("selector") not in
+                    {"#moves", "#turn", "#status"} or step.get("op") != "eq"
+                    for step in steps[len(clicks):]) or
+                not any(step.get("selector") == "#status" and step.get("value") == "Draw"
+                        for step in steps[len(clicks):])):
+            continue
+        original_path = tuple(int(step["selector"].rsplit("-", 1)[1]) for step in clicks)
+        if _is_draw_sequence(original_path, width, height):
+            continue
+        if safe_path is None:
+            safe_path = _draw_path(width, height)
+        if safe_path is None:
+            continue
+        for step, col in zip(clicks, safe_path):
+            step["selector"] = f"#drop-{col}"
+        changes.append({"test_id": test.get("id"), "old_columns": list(original_path),
+                        "new_columns": list(safe_path),
+                        "basis": "Bounded search of explicit original-spec drop/win/draw rules; no game or independent acceptance input"})
+        evidence = test.get("evidence")
+        if isinstance(evidence, dict) and isinstance(evidence.get("expected_basis"), str):
+            evidence["expected_basis"] = (
+                "From a fresh board, drop in columns " + ",".join(map(str, safe_path)) +
+                ". Every move remains non-winning; the last fills the board, so status is Draw. "
+                "This path was computed from explicit rules before code generation; the model draft is archived.")
+    return corrected, changes

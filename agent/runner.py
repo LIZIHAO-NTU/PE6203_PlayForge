@@ -22,7 +22,7 @@ from .diagnostics import route_failure, validate_diagnosis, validate_blocked_rep
 from .evidence import runtime_metadata
 from .lessons import load_lessons, select_hints, record_recovery
 from .plan_review import EXECUTION_CONTRACT, PlanReviewError, inspect_plan, validate_audit, failure_fingerprint
-from .gravity_plan_review import gravity_plan_conflicts
+from .gravity_plan_review import gravity_plan_conflicts, repair_explicit_gravity_draw_plan
 
 
 def verification_score(result):
@@ -157,6 +157,12 @@ def run(config, spec_path, output, max_rounds=3, max_calls=8, max_seconds=600,
             raw_plan = client.ask_json("plan", planning_system, prompt)
             try:
                 plan = validate_plan(raw_plan)
+                corrected, draw_corrections = repair_explicit_gravity_draw_plan(plan, spec)
+                if draw_corrections:
+                    trace.save("draft_gravity_plan.json", plan)
+                    trace.save("gravity_plan_corrections.json", draw_corrections)
+                    summary["gravity_plan_corrections"] = draw_corrections
+                    plan = validate_plan(corrected)
                 gravity_conflicts = gravity_plan_conflicts(plan, spec)
                 if gravity_conflicts:
                     trace.save("draft_gravity_plan_conflicts.json", gravity_conflicts)
