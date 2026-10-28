@@ -22,7 +22,8 @@ from .diagnostics import route_failure, validate_diagnosis, validate_blocked_rep
 from .evidence import runtime_metadata
 from .lessons import load_lessons, select_hints, record_recovery
 from .plan_review import EXECUTION_CONTRACT, PlanReviewError, inspect_plan, validate_audit, failure_fingerprint
-from .gravity_plan_review import gravity_plan_conflicts, repair_explicit_gravity_draw_plan
+from .gravity_plan_review import (gravity_plan_conflicts, repair_explicit_gravity_draw_plan,
+                                  supports_explicit_gravity_review)
 
 
 def verification_score(result):
@@ -149,10 +150,30 @@ def run(config, spec_path, output, max_rounds=3, max_calls=8, max_seconds=600,
         plan_details = None
         raw_plan = None
         explicit_plan_conflict = False
-        for _ in range(2):
+        # Explicit gravity plans have a deterministic pre-freeze review that may
+        # reveal a second error after schema validation. Allow one extra draft
+        # within the shared call budget; other tasks keep their established flow.
+        plan_attempt_limit = min(3 if supports_explicit_gravity_review(spec) else 2,
+                                 max(1, max_calls - 1))
+        for attempt_index in range(plan_attempt_limit):
+            rebuild_tests = (attempt_index >= 2 and isinstance(plan_error, str)
+                             and plan_error.startswith("Explicit gravity plan conflicts:"))
+            previous_plan = raw_plan if plan_error else None
+            if rebuild_tests and isinstance(previous_plan, dict):
+                # Repeating an invalid move sequence anchors the next response.
+                # Keep requirements and contracts, but ask for fresh test paths.
+                previous_plan = {key: value for key, value in previous_plan.items() if key != "tests"}
             prompt = json.dumps({"original_spec": spec, "validation_feedback": plan_error,
                                  "validation_details": plan_details,
-                                 "previous_plan": raw_plan if plan_error else None,
+                                 "previous_plan": previous_plan,
+                                 "planning_recovery_strategy": (
+                                     "Rebuild test input sequences from the original rules and the initial state; "
+                                     "preserve every mandatory requirement and its verification mode. "
+                                     "Do not reuse the rejected sequences or invent a new expected value. "
+                                     "Split long scenarios into separate fresh-page tests within the step limit. "
+                                     "If an expected result cannot be derived, report that uncertainty; "
+                                     "do not silently downgrade the verification mode."
+                                     if rebuild_tests else None),
                                  "execution_contract": EXECUTION_CONTRACT}, ensure_ascii=False)
             raw_plan = client.ask_json("plan", planning_system, prompt)
             try:
@@ -184,7 +205,7 @@ def run(config, spec_path, output, max_rounds=3, max_calls=8, max_seconds=600,
             if explicit_plan_conflict:
                 raise PlanReviewError("Could not resolve explicit gravity plan conflicts: " + str(plan_error))
             if strict_plan or not isinstance(raw_plan, dict) or raw_plan.get("supported") is not True:
-                raise ValueError("Could not produce a valid test plan: " + str(plan_error))
+                raise PlanReviewError("Could not produce a valid test plan: " + str(plan_error))
             # Keep the original requirements. Only our confidence/acceptance scope degrades.
             plan = validate_plan(startup_only_plan())
             summary.update(planning_status="failed_startup_only", planning_error=plan_error)

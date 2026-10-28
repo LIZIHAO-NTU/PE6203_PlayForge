@@ -125,8 +125,107 @@ class GravityPlanReviewTests(unittest.TestCase):
         draft["tests"][0]["steps"][-1]["path"] = "board.8"
         self.assertEqual(gravity_plan_conflicts(draft, FOUR_COLUMN_SPEC), [])
 
+    def test_declared_state_move_count_catches_win_before_later_click(self):
+        draft = {"state_contract": {"moves": "number of legal drops so far"},
+                 "tests": [{"id": "T4", "setup_steps": clicks(0, 1, 1, 2, 3, 2, 2, 3),
+                            "steps": [{"action": "assert", "source": "state", "path": "moves",
+                                       "op": "eq", "value": 8}]}]}
+        conflicts = gravity_plan_conflicts(draft, FOUR_COLUMN_SPEC)
+        self.assertEqual(len(conflicts), 1)
+        self.assertEqual(conflicts[0]["actual_from_spec"], 7)
+        self.assertEqual(conflicts[0]["test_id"], "T4")
+        draft["tests"][0]["steps"][0]["value"] = 7
+        self.assertEqual(gravity_plan_conflicts(draft, FOUR_COLUMN_SPEC), [])
+
+    def test_ambiguous_state_move_field_is_not_assumed_legal_count(self):
+        draft = {"state_contract": {"moves": "animation frame count"},
+                 "tests": [{"id": "T", "steps": clicks(0) +
+                            [{"action": "assert", "source": "state", "path": "moves",
+                              "op": "eq", "value": 99}]}]}
+        self.assertEqual(gravity_plan_conflicts(draft, FOUR_COLUMN_SPEC), [])
+
 
 class GravityRunnerTests(TempTest):
+    def test_sequential_plan_errors_get_third_attempt_when_budget_allows(self):
+        spec_path = self.root / "spec.md"
+        spec_path.write_text(FOUR_COLUMN_SPEC, encoding="utf-8")
+        missing = example_plan()
+        missing["requirements"].append({"id": "R2", "text": "Counter is visible", "verification": "automated"})
+        oversized = example_plan()
+        oversized["tests"][0]["steps"] = ([{"action": "click", "selector": "#increment"}] * 18
+                                           + [oversized["tests"][0]["steps"][-1]])
+        valid = example_plan()
+        stages = []
+        prompts = []
+
+        class Client(FakeClient):
+            def ask_json(self, stage, system, prompt):
+                self.calls += 1
+                stages.append(stage)
+                prompts.append(json.loads(prompt))
+                if stage == "plan":
+                    return deepcopy((missing, oversized, valid)[stages.count("plan") - 1])
+                return example_bundle()
+
+        out = self.root / "run"
+        code = run(config(), spec_path, out, client_factory=Client,
+                   preflight_fn=lambda **kw: {"ok": True},
+                   verifier=lambda *a, **kw: verifier_result(True), max_calls=5, strict_plan=True)
+        summary = json.loads((out / "summary.json").read_text(encoding="utf-8"))
+        self.assertEqual(code, 0, summary)
+        self.assertEqual(stages, ["plan", "plan", "plan", "code_1"])
+        self.assertIn("missing IDs: R2", prompts[1]["validation_feedback"])
+        self.assertIn("1..18 steps/test", prompts[2]["validation_feedback"])
+
+    def test_exhausted_invalid_plans_are_reported_as_review_not_runtime_error(self):
+        spec_path = self.root / "spec.md"
+        spec_path.write_text(FOUR_COLUMN_SPEC, encoding="utf-8")
+        invalid = example_plan()
+        invalid["requirements"].append({"id": "R2", "text": "Counter is visible", "verification": "automated"})
+        stages = []
+
+        class Client(FakeClient):
+            def ask_json(self, stage, system, prompt):
+                self.calls += 1
+                stages.append(stage)
+                return deepcopy(invalid)
+
+        out = self.root / "run"
+        code = run(config(), spec_path, out, client_factory=Client,
+                   preflight_fn=lambda **kw: {"ok": True}, max_calls=5, strict_plan=True)
+        summary = json.loads((out / "summary.json").read_text(encoding="utf-8"))
+        self.assertEqual(code, 2)
+        self.assertEqual(stages, ["plan", "plan", "plan"])
+        self.assertEqual(summary["status"], "plan_review_required")
+        self.assertFalse((out / "game").exists())
+
+    def test_last_attempt_rebuilds_conflicting_sequences_without_losing_requirements(self):
+        spec_path = self.root / "spec.md"
+        spec_path.write_text(SPEC, encoding="utf-8")
+        bad = example_plan()
+        bad["tests"][0]["steps"] = clicks(0, 0, 0) + [assertion("#cell-0-0", "B")]
+        good = deepcopy(bad)
+        good["tests"][0]["steps"][-1]["value"] = "A"
+        prompts = []
+
+        class Client(FakeClient):
+            def ask_json(self, stage, system, prompt):
+                self.calls += 1
+                if stage == "plan":
+                    prompts.append(json.loads(prompt))
+                    return deepcopy(bad if len(prompts) < 3 else good)
+                return example_bundle()
+
+        out = self.root / "run"
+        code = run(config(), spec_path, out, client_factory=Client,
+                   preflight_fn=lambda **kw: {"ok": True},
+                   verifier=lambda *a, **kw: verifier_result(True), max_calls=5, strict_plan=True)
+        self.assertEqual(code, 0)
+        self.assertEqual(len(prompts), 3)
+        self.assertNotIn("tests", prompts[2]["previous_plan"])
+        self.assertEqual(prompts[2]["previous_plan"]["requirements"], bad["requirements"])
+        self.assertIn("rebuild", prompts[2]["planning_recovery_strategy"].lower())
+
     def test_pure_draw_path_is_corrected_before_freeze(self):
         spec_path = self.root / "spec.md"
         spec_path.write_text(FOUR_COLUMN_SPEC, encoding="utf-8")

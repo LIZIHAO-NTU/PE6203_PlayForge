@@ -30,6 +30,11 @@ def _rules(spec):
     return columns, rows
 
 
+def supports_explicit_gravity_review(spec):
+    """True only when the original spec states every transition we replay."""
+    return _rules(spec) is not None
+
+
 def _winner(board, row, col, token):
     height, width = len(board), len(board[0])
     for dr, dc in ((0, 1), (1, 0), (1, 1), (1, -1)):
@@ -104,6 +109,19 @@ def gravity_plan_conflicts(plan, original_spec):
                 flat_index = int(board_index.group(1))
                 if 0 <= flat_index < width * height:
                     actual = board[flat_index // width][flat_index % width]
+            if step.get("source") == "state":
+                path = step.get("path")
+                description = plan.get("state_contract", {}).get(path, "")
+                if isinstance(description, str):
+                    label = description.lower()
+                    if path == "moves" and (
+                            ("legal" in label or "valid" in label)
+                            and ("drop" in label or "move" in label or "count" in label)):
+                        actual = moves
+                    elif path == "turn" and "turn" in label:
+                        actual = turn
+                    elif path == "status" and ("status" in label or "result" in label):
+                        actual = status
             if actual is None or step.get("op") not in {"eq", "contains"}:
                 continue
             if not compare(actual, step["op"], step["value"]):
