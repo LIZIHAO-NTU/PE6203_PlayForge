@@ -145,7 +145,7 @@ class RepairPacketTests(unittest.TestCase):
 
 
 class BlockedRepairTests(TempTest):
-    def execute(self,blocked=None,initial=False,**options):
+    def execute(self,blocked=None,initial=False,summary_text=None,**options):
         stages=[]
         payloads=[]
         original_plan=example_plan()
@@ -158,7 +158,10 @@ class BlockedRepairTests(TempTest):
                 payloads.append(json.loads(prompt))
                 if stage=="plan": return deepcopy(original_plan)
                 if stage=="code_1" and not initial: return example_bundle()
-                return {"blocked":deepcopy(blocked)}
+                response={"blocked":deepcopy(blocked)}
+                if summary_text is not None:
+                    response["summary"]=summary_text
+                return response
         spec=self.root/"spec.md"
         spec.write_text("Click adds exactly one to score, initially zero.",encoding="utf-8")
         output=self.root/"run"
@@ -186,6 +189,13 @@ class BlockedRepairTests(TempTest):
     def test_uncertain_category_stops_without_success(self):
         _,summary,_,_,_,_=self.execute({"category":"uncertain","reason":"Insufficient evidence","evidence_test_ids":["T1"]})
         self.assertEqual(summary["status"],"plan_review_required")
+
+    def test_oversized_optional_summary_does_not_destroy_valid_blocked_evidence(self):
+        code,summary,output,_,_,_=self.execute(summary_text="verbose "*300)
+        self.assertEqual(code,2)
+        self.assertEqual(summary["status"],"plan_review_required")
+        self.assertIn("blocked_format_warning",summary)
+        self.assertTrue((output/"game/index.html").is_file())
 
     def test_nonexistent_evidence_rejected(self):
         code,summary,output,_,_,_=self.execute({"category":"test_issue","reason":"No actual citation","evidence_test_ids":["NotReal"]})

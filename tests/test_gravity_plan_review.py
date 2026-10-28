@@ -115,6 +115,16 @@ class GravityPlanReviewTests(unittest.TestCase):
         self.assertEqual(repair_explicit_gravity_draw_plan(draft, FOUR_COLUMN_SPEC),
                          (draft, []))
 
+    def test_declared_row_major_board_index_is_checked(self):
+        draft = {"state_contract": {"board": "array of 12 strings (row-major row 0..2, col 0..3)"},
+                 "tests": [{"id": "TBoard", "steps": clicks(0, 1, 0, 1, 0)
+                            + [{"action": "assert", "source": "state", "path": "board.2",
+                                "op": "eq", "value": "A"}]}]}
+        conflicts = gravity_plan_conflicts(draft, FOUR_COLUMN_SPEC)
+        self.assertEqual(conflicts[0]["actual_from_spec"], "")
+        draft["tests"][0]["steps"][-1]["path"] = "board.8"
+        self.assertEqual(gravity_plan_conflicts(draft, FOUR_COLUMN_SPEC), [])
+
 
 class GravityRunnerTests(TempTest):
     def test_pure_draw_path_is_corrected_before_freeze(self):

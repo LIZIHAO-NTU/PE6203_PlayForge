@@ -252,6 +252,13 @@ def run(config, spec_path, output, max_rounds=3, max_calls=8, max_seconds=600,
                     "remaining_seconds": max(0, int(deadline - time.monotonic()))}, ensure_ascii=False)
                 response = client.ask_json(f"code_{round_number}", CODER_SYSTEM, prompt)
                 if isinstance(response, dict) and "blocked" in response:
+                    if "summary" in response and (not isinstance(response["summary"], str)
+                                                  or len(response["summary"]) > 1500):
+                        # A malformed optional prose field must not discard valid
+                        # cited diagnosis or the best saved game. Raw API is traced.
+                        summary["blocked_format_warning"] = "Ignored invalid optional blocked summary"
+                        trace.event("blocked_summary_ignored", round=round_number)
+                        response = {k: v for k, v in response.items() if k != "summary"}
                     blocked = validate_blocked_repair(response, feedback, bool(best))
                     summary["repair_blocked"] = blocked
                     trace.event("repair_blocked", **blocked)

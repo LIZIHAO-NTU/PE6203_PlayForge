@@ -53,6 +53,11 @@ def gravity_plan_conflicts(plan, original_spec):
     width, height = size
     conflicts = []
     covered_draw_requirements = set()
+    board_contract = plan.get("state_contract", {}).get("board", "")
+    declared_row_major = (re.search(r"row-major\s+row\s*0\.\.(\d+)\s*,\s*col\s*0\.\.(\d+)",
+                                    board_contract, re.I) if isinstance(board_contract, str) else None)
+    row_major = bool(declared_row_major and
+                     tuple(map(int, declared_row_major.groups())) == (height - 1, width - 1))
     for test in plan.get("tests", []):
         steps = test_steps(test)
         # Never partially replay a test containing an unfamiliar operation.
@@ -83,7 +88,7 @@ def gravity_plan_conflicts(plan, original_spec):
                         else:
                             turn = "B" if turn == "A" else "A"
                 continue
-            if action != "assert" or "value" not in step or step.get("source") != "text":
+            if action != "assert" or "value" not in step:
                 continue
             selector = step.get("selector")
             values = {"#turn": turn, "#moves": str(moves), "#status": status}
@@ -92,12 +97,18 @@ def gravity_plan_conflicts(plan, original_spec):
                 r, c = map(int, cell.groups())
                 if 0 <= r < height and 0 <= c < width:
                     values[selector] = board[r][c]
-            actual = values.get(selector)
+            actual = values.get(selector) if step.get("source") == "text" else None
+            board_index = (re.fullmatch(r"board\.(\d+)", step.get("path", ""))
+                           if step.get("source") == "state" and row_major else None)
+            if board_index:
+                flat_index = int(board_index.group(1))
+                if 0 <= flat_index < width * height:
+                    actual = board[flat_index // width][flat_index % width]
             if actual is None or step.get("op") not in {"eq", "contains"}:
                 continue
             if not compare(actual, step["op"], step["value"]):
                 conflicts.append({"test_id": test.get("id"), "step": index,
-                                  "selector": selector, "expected": step["value"],
+                                  "selector": selector or step.get("path"), "expected": step["value"],
                                   "actual_from_spec": actual,
                                   "kind": "explicit_gravity_transition_conflict",
                                   "message": "Draft assertion conflicts with a replay of the explicit drop, win, draw and restart rules. Revise the plan before generating code."})
