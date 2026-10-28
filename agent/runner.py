@@ -22,6 +22,7 @@ from .diagnostics import route_failure, validate_diagnosis, validate_blocked_rep
 from .evidence import runtime_metadata
 from .lessons import load_lessons, select_hints, record_recovery
 from .plan_review import EXECUTION_CONTRACT, PlanReviewError, inspect_plan, validate_audit, failure_fingerprint
+from .gravity_plan_review import gravity_plan_conflicts
 
 
 def verification_score(result):
@@ -147,6 +148,7 @@ def run(config, spec_path, output, max_rounds=3, max_calls=8, max_seconds=600,
         plan_error = None
         plan_details = None
         raw_plan = None
+        explicit_plan_conflict = False
         for _ in range(2):
             prompt = json.dumps({"original_spec": spec, "validation_feedback": plan_error,
                                  "validation_details": plan_details,
@@ -155,12 +157,26 @@ def run(config, spec_path, output, max_rounds=3, max_calls=8, max_seconds=600,
             raw_plan = client.ask_json("plan", planning_system, prompt)
             try:
                 plan = validate_plan(raw_plan)
+                gravity_conflicts = gravity_plan_conflicts(plan, spec)
+                if gravity_conflicts:
+                    trace.save("draft_gravity_plan_conflicts.json", gravity_conflicts)
+                    details = "; ".join(
+                        (f"{item['requirement_id']} ({item['test_id']}): no reachable Draw assertion"
+                         if item['kind'] == 'missing_gravity_draw_coverage' else
+                         f"{item['test_id']} step {item['step']} ({item['selector']}): "
+                         f"expected {item['expected']!r}, explicit rules yield {item['actual_from_spec']!r}")
+                        for item in gravity_conflicts[:8])
+                    raise ValueError("Explicit gravity plan conflicts: " + details)
                 break
             except (ValueError, TypeError, KeyError) as error:
+                explicit_plan_conflict = explicit_plan_conflict or str(error).startswith(
+                    "Explicit gravity plan conflicts:")
                 plan_error = str(error)
                 plan_details = validation_feedback(error, raw_plan)
                 trace.event("plan_validation_failed", error=plan_error, details=plan_details)
         else:
+            if explicit_plan_conflict:
+                raise PlanReviewError("Could not resolve explicit gravity plan conflicts: " + str(plan_error))
             if strict_plan or not isinstance(raw_plan, dict) or raw_plan.get("supported") is not True:
                 raise ValueError("Could not produce a valid test plan: " + str(plan_error))
             # Keep the original requirements. Only our confidence/acceptance scope degrades.
@@ -193,6 +209,10 @@ def run(config, spec_path, output, max_rounds=3, max_calls=8, max_seconds=600,
                         raise PlanReviewError("Draft plan review is unverified: " + audit["reason"])
                     plan = reviewed
                     summary["plan_review"] = inspect_plan(plan, spec)
+                    audit_conflicts = gravity_plan_conflicts(plan, spec)
+                    if audit_conflicts:
+                        trace.save("audit_gravity_plan_conflicts.json", audit_conflicts)
+                        raise PlanReviewError("Plan audit reintroduced explicit gravity rule conflicts")
                 except Exception as error:
                     summary["plan_audit_status"] = "unverified"
                     summary["plan_audit_error"] = trace.redact(str(error))
