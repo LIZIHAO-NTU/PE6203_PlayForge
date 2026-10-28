@@ -1,9 +1,38 @@
 """Explicit launch-only degradation; never silently weaken functional acceptance."""
 from collections import Counter
+from copy import deepcopy
 import json
 
 from .contracts import validate_plan, test_steps
 from .quality import review_plan
+
+
+def canonicalize_gameplay_shape(candidate):
+    """Move explicitly supplied gameplay fields into their schema location.
+
+    This changes only the JSON shape. It never invents or replaces a model claim.
+    The normal contract validator still checks every value after this step.
+    """
+    if not isinstance(candidate, dict):
+        return candidate
+    result = deepcopy(candidate)
+    keys = ("interaction_model", "input_mode", "core_loop")
+    if not any(key in result for key in keys):
+        return result
+    gameplay = result.get("gameplay")
+    if gameplay is None:
+        gameplay = {}
+        result["gameplay"] = gameplay
+    if not isinstance(gameplay, dict):
+        raise ValueError("Conflicting gameplay shape: gameplay must be an object")
+    for key in keys:
+        if key not in result:
+            continue
+        value = result.pop(key)
+        if key in gameplay and gameplay[key] != value:
+            raise ValueError("Conflicting gameplay field: " + key)
+        gameplay[key] = value
+    return result
 
 
 def validate_recovery(previous, candidate):

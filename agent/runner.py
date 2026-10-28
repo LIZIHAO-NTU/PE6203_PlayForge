@@ -12,7 +12,7 @@ from .prompts import CODER_SYSTEM, planner_system, DIAGNOSTIC_SYSTEM, PLAN_AUDIT
 from .provider import BudgetError, ChatClient
 from .trace import Trace
 from .state import AgentState, bundle_digest, compact_failure
-from .planning import startup_only_plan, validate_recovery
+from .planning import canonicalize_gameplay_shape, startup_only_plan, validate_recovery
 from .feedback import validation_feedback, repair_feedback
 from .quality import completion_gate, review_plan
 from .verification import failure_summary, preflight, verify, verify_repeated
@@ -21,7 +21,11 @@ from .artifacts import check_artifacts
 from .diagnostics import route_failure, validate_diagnosis, validate_blocked_repair
 from .evidence import runtime_metadata
 from .lessons import load_lessons, select_hints, record_recovery
-from .plan_review import EXECUTION_CONTRACT, PlanReviewError, inspect_plan, validate_audit, failure_fingerprint
+from .plan_review import (EXECUTION_CONTRACT, PlanReviewError, inspect_plan,
+                          normalize_explicit_grid_plan, require_explicit_grid_consistency,
+                          normalize_explicit_resource_plan, require_explicit_resource_consistency,
+                          validate_audit, failure_fingerprint)
+from .spec_oracles import normalize_explicit_portal_plan, normalize_explicit_charge_craft_plan
 
 
 def verification_score(result):
@@ -147,6 +151,7 @@ def run(config, spec_path, output, max_rounds=3, max_calls=8, max_seconds=600,
         plan_error = None
         plan_details = None
         raw_plan = None
+        explicit_plan_conflict = False
         for _ in range(2):
             prompt = json.dumps({"original_spec": spec, "validation_feedback": plan_error,
                                  "validation_details": plan_details,
@@ -154,13 +159,44 @@ def run(config, spec_path, output, max_rounds=3, max_calls=8, max_seconds=600,
                                  "execution_contract": EXECUTION_CONTRACT}, ensure_ascii=False)
             raw_plan = client.ask_json("plan", planning_system, prompt)
             try:
-                plan = validate_plan(raw_plan)
+                canonical_plan = canonicalize_gameplay_shape(raw_plan)
+                if canonical_plan != raw_plan:
+                    trace.save("draft_plan_before_shape_normalization.json", raw_plan)
+                    trace.event("plan_shape_normalized", fields=[key for key in
+                                ("interaction_model", "input_mode", "core_loop") if key in raw_plan])
+                plan = validate_plan(canonical_plan)
+                corrected, corrections = normalize_explicit_grid_plan(plan, spec)
+                if corrections:
+                    trace.save("draft_grid_plan.json", plan)
+                    trace.save("grid_plan_corrections.json", corrections)
+                    summary["grid_plan_corrections"] = corrections
+                    plan = validate_plan(corrected)
+                corrected, corrections = normalize_explicit_resource_plan(plan, spec)
+                if corrections:
+                    trace.save("draft_resource_plan.json", plan)
+                    trace.save("resource_plan_corrections.json", corrections)
+                    summary["resource_plan_corrections"] = corrections
+                    plan = validate_plan(corrected)
+                for label, normalizer in (("portal", normalize_explicit_portal_plan),
+                                          ("charge_craft", normalize_explicit_charge_craft_plan)):
+                    corrected, corrections = normalizer(plan, spec)
+                    if corrections:
+                        trace.save(f"draft_{label}_plan.json", plan)
+                        trace.save(f"{label}_plan_corrections.json", corrections)
+                        summary[f"{label}_plan_corrections"] = corrections
+                        plan = validate_plan(corrected)
+                require_explicit_grid_consistency(plan, spec)
+                require_explicit_resource_consistency(plan, spec)
                 break
             except (ValueError, TypeError, KeyError) as error:
+                explicit_plan_conflict = explicit_plan_conflict or str(error).startswith((
+                    "Explicit grid transition conflicts:", "Explicit resource plan conflicts:"))
                 plan_error = str(error)
                 plan_details = validation_feedback(error, raw_plan)
                 trace.event("plan_validation_failed", error=plan_error, details=plan_details)
         else:
+            if explicit_plan_conflict:
+                raise PlanReviewError("Could not resolve explicit test conflicts: " + str(plan_error))
             if strict_plan or not isinstance(raw_plan, dict) or raw_plan.get("supported") is not True:
                 raise ValueError("Could not produce a valid test plan: " + str(plan_error))
             # Keep the original requirements. Only our confidence/acceptance scope degrades.
@@ -186,13 +222,20 @@ def run(config, spec_path, output, max_rounds=3, max_calls=8, max_seconds=600,
                         "original_spec": spec, "draft_plan": plan,
                         "execution_contract": EXECUTION_CONTRACT, "deterministic_review": summary["plan_review"]}, ensure_ascii=False))
                     trace.save("plan_audit_response.json", raw_audit)
-                    reviewed, audit = validate_audit(raw_audit, plan)
+                    reviewed, audit = validate_audit(
+                        raw_audit, plan, required_warnings=summary["plan_review"]["warnings"])
                     summary["plan_audit_status"] = audit["status"]
                     trace.save("plan_audit.json", audit)
                     if audit["status"] == "unverified":
                         raise PlanReviewError("Draft plan review is unverified: " + audit["reason"])
                     plan = reviewed
                     summary["plan_review"] = inspect_plan(plan, spec)
+                    if any(w.get("kind") in {"explicit_grid_transition_conflict",
+                                              "explicit_resource_transition_conflict",
+                                              "explicit_resource_reference_conflict",
+                                              "explicit_resource_invalid_action"}
+                           for w in summary["plan_review"]["warnings"]):
+                        raise PlanReviewError("Draft plan still conflicts with explicit grid transitions")
                 except Exception as error:
                     summary["plan_audit_status"] = "unverified"
                     summary["plan_audit_error"] = trace.redact(str(error))
@@ -295,7 +338,7 @@ def run(config, spec_path, output, max_rounds=3, max_calls=8, max_seconds=600,
                                 "execution_contract": EXECUTION_CONTRACT,
                                 "instruction": "Repair the functional plan against the original spec. Do not weaken earlier requirements or assertions. No game implementation or held-out checks are supplied."}, ensure_ascii=False))
                             trace.save("recovery_response.json", recovered_raw)
-                            recovered = validate_recovery(raw_plan, recovered_raw)
+                            recovered = validate_recovery(raw_plan, canonicalize_gameplay_shape(recovered_raw))
                         except Exception as error:
                             # Preserve the already generated game if recovery/API/budget fails.
                             summary["planning_recovery_error"] = trace.redact(str(error))

@@ -186,6 +186,9 @@ explicit assert. Trace legal input events against the stated initial setup; expe
 blocked directions and winners must agree with the rules, including earlier terminal states.
 Example JSON structure (not a game template):
 {"supported":true,"reason":"","title":"...","development_plan":["..."],
+ "gameplay":{"interaction_model":"turn_based","input_mode":"pointer",
+             "core_loop":"Player acts; the state updates once per action",
+             "invariants":["A legal action changes state exactly once"]},
  "state_contract":{"phase":"string"},
  "requirements":[{"id":"R1","text":"Required board is rendered","verification":"automated","priority":"core"},
                  {"id":"R2","text":"Visual quality","verification":"manual"}],
