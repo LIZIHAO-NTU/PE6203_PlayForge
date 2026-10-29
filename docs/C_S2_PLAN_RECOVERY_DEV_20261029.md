@@ -39,10 +39,20 @@ Each row is an independent, fresh development run on the same final code.
 
 The three-run development sample is 3/3 for autonomous automated completion
 and 3/3 for independent automated acceptance. It is too small to establish a
-95% general success rate. The three manual acceptance items have not been
-confirmed for these new games. This does not revise the original frozen S2
+95% general success rate. The manual playtest status is recorded below. This does
+not revise the original frozen S2
 score. Earlier exploratory runs `01`–`06` used intermediate code revisions and
 must not be pooled with the final three-run sample.
+
+## Manual playtest update (2026-10-29)
+
+The user played `S2_compiler_09` at `http://127.0.0.1:8773/` after being asked
+to check dropping, win, draw, and Restart during and after a game, and reported
+"人工成功" (manual success). Record this as the user's manual pass for this
+development game. This is a user report, not a new agent-generated verdict or
+an independently captured per-action trace. `S2_compiler_07` and
+`S2_compiler_08` remain manual-pending. The raw automated summaries and frozen
+S2 results are unchanged.
 
 Zero-model-API checks on the final code: 24 gravity-plan tests pass; the full
 real-browser suite passes 368/368 with zero skipped. Each independent recheck
