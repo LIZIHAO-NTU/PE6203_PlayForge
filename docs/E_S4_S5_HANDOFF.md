@@ -25,7 +25,8 @@ boundaries, Space no-op outside the target, reachable win, terminal lock and
 stability, Restart from Won, simultaneous opposite directions, and Restart
 during Playing. The manual check compares visible player movement and target
 placement with `playerX` snapshots, including start, intermediate positions,
-boundaries and target; it also records a supplementary timed speed check.
+boundaries and target; checks Restart from Playing and Won without page reload;
+and records a supplementary timed speed check.
 
 The target zone is now x=150..210. Goal movement targets x>=180, centered in
 the zone, with 30 canvas pixels of margin on either side. T5 asserts both zone
@@ -56,21 +57,31 @@ s5_pulse_target.md
 3907aaa11f0ec23419cdf8b193256739111f9aba9b1b7ac2ea96e72b6a059a96
 
 s5_pulse_target.acceptance.json
-765356bb9c6f27397b318a5ece67a45e3918b17eee51f12ccba2d225ef9a5335
+1cf86291dd256cb258dd62d7536502a006846b52a3cff2f235e2517d20b4dd48
 
 suite.json
 8faac7e8606f224d4e5b5a70431699c04f2ae82b814c2599af9d6c009f9f283d
 ```
 
-These hashes identify review drafts, not a group-approved formal freeze.
+These hashes identify review drafts, not a group-approved formal freeze. The
+acceptance hash reflects the explicit Restart-without-reload clarification;
+the suite file itself is unchanged and continues to point at this acceptance
+file.
 
 ## Validation and next actions
 
-1. E's independent S4 review is static only. After all group freeze conditions
-   are met, E executes D's S4 acceptance plan from the review-only location;
-   never copy it into the model-accessible generation workspace.
-2. A reviews the revised S5 file hashes and strategy, then owns S5's formal
-   execution after the same freeze confirmation.
+1. E's independent S4 review is static only. D's current record still marks
+   M1/M2 and all ten automated checks not run. No generated S4 game or team-
+   frozen candidate/configuration is available in this checkout, so manual
+   confirmation cannot yet be performed or claimed. Once the group freezes an
+   eligible candidate and E receives the isolated generated game, E executes
+   D's S4 plan from the review-only location; never expose it to the model.
+2. E checked S5's R8 manual item against the requirement and found that the
+   explicit no-reload Restart behavior was not stated there, despite being in
+   the specification and automated test basis. The manual instruction now
+   explicitly checks Restart in Playing and Won without page navigation or
+   reload. The updated plan passes contract validation and has no plan
+   warnings; A still owns S5's formal execution after group freeze.
 3. No acceptance JSON, expected results, review-only directory or complete
    repository may enter generation/planning/repair messages. Inspect actual
    paths and messages and record any exposure.
