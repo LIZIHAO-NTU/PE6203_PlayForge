@@ -11,8 +11,8 @@ Runtime baseline: `c94e029f25e7fa8d6c90197ad051b60ac88d74b2`. Each case has two 
 | S1 | A / B | D, centralized execution | 0/2 | 2/2 | 9/9 each, two repetitions | A completed post-run transcription review. B confirmed M1-M4, 4/4 for each artifact. Some checks use personal oral confirmation plus existing screenshots/source; no new network or keyboard-repeat event log. Pre-run independent approval is not retrospectively claimed. |
 | S2 | B / C | C | 0/2 | 2/2 | 9/9 each, two repetitions | C reported M1-M3, 3/3 for each original artifact, partly confirmed from existing browser records rather than replaying every route personally. Original self-test failures remain. |
 | S3 | C / D | D, centralized execution | 2/2 | 2/2 | 10/10 each, two repetitions | Assistant-operated normal UI observations meet M1-M3 for both artifacts, including separate Won/Lost terminal checks, Enter versus Submit, read-only live-state comparison, and supplementary Restart checks. D's personal signoff is not impersonated. |
-| S4 | D / E | D, centralized execution | 1/2 | 2/2 | 10/10 each, two repetitions | Pre-run static review exists. E's manual confirmation for both saved generated artifacts has not yet been received. |
-| S5 | E / A | D, centralized execution | 1/2 | 1/2 | Run 1: 8/9; run 2: 9/9; two repetitions each | A supplied playtest, narrow-display, live-coordinate and speed evidence. Run 1 T8 remains unstable (pass/fail repetitions); layout and timing-procedure limitations remain. E subsequently revised manual instructions; coverage reconciliation is pending, not an automatic rescore. |
+| S4 | D / E | D, centralized execution | 1/2 | 2/2 | 10/10 each, two repetitions | E completed M1-M2 for both saved artifacts using normal UI input. Visible English rules and accessible Pump/Deliver/Restart controls were confirmed; separate Won and Lost routes, terminal no-op actions, Restart, and visible/read-only-state agreement passed. |
+| S5 | E / A | D, centralized execution | 1/2 | 1/2 | Run 1: 8/9; run 2: 9/9; two repetitions each | A's evidence covers desktop/narrow display, visible movement/coordinates, target and boundary observations, and supplementary speed. E completed the newly clarified Restart checks for both artifacts in Playing and Won: no navigation/reload and visible/read-only state reset agreement passed. Run 1 T8 remains unstable; original scores and qualifications are unchanged. |
 
 D's S1/S3/S4/S5 batch used OpenRouter `deepseek/deepseek-v4.1-flash-1017`: 8/8 launchable, autonomous automatic 4/8 (50%), selected independent automatic 7/8 (87.5%). C's S2 used direct DeepSeek `deepseek-flash`: 2/2 launchable, autonomous 0/2, independent automatic 2/2. A cross-batch descriptive total is 10/10 launchable, autonomous 4/10 (40%), independent automatic 9/10 (90%). These are different provider/model configurations; do not describe that total as one identical-condition experiment or as full gameplay acceptance.
 
@@ -25,7 +25,17 @@ E reported commit `92b5beb` adding manual observations for Restart during Playin
 - Plan used for D's original S5 execution: SHA-256 `765356bb9c6f27397b318a5ece67a45e3918b17eee51f12ccba2d225ef9a5335`.
 - Newly reported acceptance file: SHA-256 `1cf86291dd256cb258dd62d7536502a006846b52a3cff2f235e2517d20b4dd48`.
 
-This entry records E's supplied message, not an independent inspection of that new file or proof that both games passed the new steps. Compare the revision with A's existing observations and supplement only missing evidence. Keep old results tied to their original plan hash. Do not change the T8 failure or require regeneration merely to supplement manual observations.
+E has now executed the added Restart observations against both saved S5 artifacts. In each artifact, Restart was checked once from a moved Playing state and once after reaching Won. The URL, `performance.timeOrigin` and navigation-entry count remained unchanged; the read-only state and visible score/phase returned to the initial values. A's existing evidence already covers the other revised manual areas: desktop/narrow presentation, visible movement and `playerX` correspondence, target-zone and boundary observations, and supplementary speed observation. This is a manual coverage supplement only. Keep old results tied to their original plan hash; do not change the run 1 T8 failure, rescore either artifact, or claim a new formal automatic execution.
+
+## E manual confirmation update
+
+On 2026-10-29, E replayed the two retained S4 artifacts and the missing S5 Restart observations from the unchanged archive `S1_S3_S4_S5_统一执行_待人工确认_20261028.zip` (SHA-256 `683cd4a4dfb16d60b75be694a3b31f55e917df04cfbd3d8869760f1fd652aa9c`). No game, plan or result file was edited.
+
+- **S4 M1, both artifacts:** visible English instructions described the resource loop and terminal outcomes; Pump, Deliver and Restart were visible, enabled and exposed with accessible names.
+- **S4 M2, both artifacts:** ordinary clicks reached a Won state (`water=0`, `delivered=0`, `rescued=2`) and a separate Lost state (`water=5`, `delivered=0`, `rescued=0`). Pump and Deliver remained enabled at both terminals but did not change state. Restart restored the initial state. Visible values agreed with `window.__gameTest.getState()` throughout the sampled routes.
+- **S5 added Restart coverage, both artifacts:** Restart from Playing and from Won restored `playerX=30`, `score=0`, `phase=Playing`. The visible score/phase matched the read-only snapshot, while URL, time origin and navigation count remained unchanged, supporting the required no-refresh/no-navigation behavior.
+
+These checks close E's requested manual handoff and the revised-S5 coverage reconciliation. They do not alter the original autonomous or independent automatic outcomes, do not repair the S5 run 1 T8 instability, and are not a new model/API run.
 
 ## Separate development results
 
@@ -42,10 +52,9 @@ PR #9 changes add bounded explicit gravity-rule plan checks and fallback/correct
 
 ## Outstanding work and ownership
 
-1. **E:** complete and return the original S4 manual checks for both saved artifacts. This is the main missing original-case manual handoff.
-2. **D/E, with A's evidence:** reconcile the revised S5 instructions with the existing playtest evidence and record the remaining qualifications. Do not treat an instruction update as executed acceptance.
-3. **D:** review the assistant-operated S3 evidence for final owner confirmation; no personal signature is invented by this summary. Resolve S1 eligibility/configuration attribution with A and retain the post-run review chronology.
-4. **B/A/C, development only:** C addresses B's newly reported initial-board and conflicting-win-rule cases and supplies corresponding tests; B re-reviews the fix; A checks integration and supplied browser evidence; C completes any remaining new-development-artifact manual confirmations. These do not block recording the original batch.
+1. **D:** review E's completed S4/S5 manual handoff recorded above and retain the original score/status separation.
+2. **D:** review the assistant-operated S3 evidence for final owner confirmation; no personal signature is invented by this summary. Resolve S1 eligibility/configuration attribution with A and retain the post-run review chronology.
+3. **B/A/C, development only:** C addresses B's newly reported initial-board and conflicting-win-rule cases and supplies corresponding tests; B re-reviews the fix; A checks integration and supplied browser evidence; C completes any remaining new-development-artifact manual confirmations. These do not block recording the original batch.
 
 No new API calls or game edits were made to create this summary. Original artifacts, result files and private acceptance material remain separate from generation/repair inputs. Do not upload keys, .env, raw model traces or independent acceptance answers to this public status index.
 
@@ -66,3 +75,5 @@ D inspected the following supplied materials. Names identify retained handoffs, 
 - 2026-10-29: Initial consolidated status. B's S1 manual handoff received; original and development outcomes separated; C's corrected-commit browser evidence received; E's S5 instruction revision recorded with original hashes preserved. S4 manual handoff remains outstanding.
 
 - 2026-10-29, subsequent B review: original four-in-a-row counterexample corrected, but pre-filled initial-board and alternative four-or-more winning-rule counterexamples remain reported. C acknowledged the review; no further fix is claimed here. Earlier 25/25 and 369/369 logs retain their original scope and do not establish coverage of these new cases. PR #9 remains outside the evaluation version per supplied team messages; original scores unchanged.
+
+- 2026-10-29, E manual update: completed S4 M1-M2 for both retained artifacts and the revised S5 Restart checks for both artifacts in Playing and Won. S5 visual/movement/coordinate/target/boundary/speed coverage remains attributed to A's existing evidence; E supplied the previously missing no-refresh Restart and state-reset observations. Original automatic results, T8 instability and batch scores remain unchanged.
