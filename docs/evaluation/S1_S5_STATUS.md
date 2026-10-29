@@ -52,9 +52,9 @@ PR #9 changes add bounded explicit gravity-rule plan checks and fallback/correct
 
 ## Outstanding work and ownership
 
-1. **D:** review E's completed S4/S5 manual handoff recorded above and retain the original score/status separation.
+1. **D:** E's completed S4/S5 handoff has been read and reconciled with the summary: both S4 M1-M2 confirmations and both S5 Restart supplements are received. This is review of E's documented observations, not an independent D replay; original outcomes and qualifications remain unchanged.
 2. **D:** review the assistant-operated S3 evidence for final owner confirmation; no personal signature is invented by this summary. Resolve S1 eligibility/configuration attribution with A and retain the post-run review chronology.
-3. **B/A/C, development only:** C addresses B's newly reported initial-board and conflicting-win-rule cases and supplies corresponding tests; B re-reviews the fix; A checks integration and supplied browser evidence; C completes any remaining new-development-artifact manual confirmations. These do not block recording the original batch.
+3. **B/A/C, development only:** PR #9 now includes `3b7e598d753ba0d0e40fdc254ff3e9d735787b04`, addressing the two reported counterexamples. B re-reviews that latest fix; C supplies the reported current-version 371-test browser regression's original log; A checks its version, hash and integration evidence. C completes any remaining development-artifact manual confirmations. These do not block recording the original batch.
 
 No new API calls or game edits were made to create this summary. Original artifacts, result files and private acceptance material remain separate from generation/repair inputs. Do not upload keys, .env, raw model traces or independent acceptance answers to this public status index.
 
@@ -77,3 +77,11 @@ D inspected the following supplied materials. Names identify retained handoffs, 
 - 2026-10-29, subsequent B review: original four-in-a-row counterexample corrected, but pre-filled initial-board and alternative four-or-more winning-rule counterexamples remain reported. C acknowledged the review; no further fix is claimed here. Earlier 25/25 and 369/369 logs retain their original scope and do not establish coverage of these new cases. PR #9 remains outside the evaluation version per supplied team messages; original scores unchanged.
 
 - 2026-10-29, E manual update: completed S4 M1-M2 for both retained artifacts and the revised S5 Restart checks for both artifacts in Playing and Won. S5 visual/movement/coordinate/target/boundary/speed coverage remains attributed to A's existing evidence; E supplied the previously missing no-refresh Restart and state-reset observations. Original automatic results, T8 instability and batch scores remain unchanged.
+
+## Latest development and handoff reconciliation
+
+PR #10 has been merged; this document on main is the maintained summary. E's S4 two-artifact manual handoff and S5 no-refresh Restart supplement are received and recorded above. Do not continue listing those as missing or overwrite A's retained S5 limitations. D reviewed E's documented scope, not a new personal replay. The separately reported `92b5beb` S5 acceptance-file revision is still not independently located or inspected by D; A requested E push it and provide a file/commit link. That file-synchronization question is distinct from E's now-received observation record.
+
+PR #9 remains Draft and unmerged when checked by D on 2026-10-29. Its branch includes `3b7e598d753ba0d0e40fdc254ff3e9d735787b04` (seeded-board and competing-win-rule abstention). A reports both new counterexamples now disable fallback and the focused rules suite passed 18/18; B's latest re-review remains pending. A also confirmed the earlier f490862 logs and hashes agree with the 369-test record. A requested C provide the original 371-test browser log for the newer version before advancing review; receipt of that log is not claimed here. These are version-specific development checks, not new generated-game scores. Earlier 25/25, 369/369 and real-model 3/3 results retain their original versions. No claim is made that the real-model 3/3 was repeated on 3b7e598.
+
+- 2026-10-29, D reconciliation: E's completed manual handoff reviewed; PR #10 merge and PR #9 latest branch commit checked on GitHub. Current development follow-up is B re-review, C latest-version browser-log delivery and A evidence/integration review. Frozen runtime baseline and original scores remain unchanged.
