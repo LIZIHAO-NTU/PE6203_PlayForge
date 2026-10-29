@@ -42,6 +42,19 @@ def assertion(selector, value, op="eq"):
 
 
 class GravityPlanReviewTests(unittest.TestCase):
+    def test_counted_empty_cells_must_match_board_dimensions(self):
+        counted = FOUR_COLUMN_SPEC.replace("All cells\nstart empty.",
+                                           "All 12 cells start empty.")
+        self.assertTrue(supports_explicit_gravity_review(counted))
+        self.assertTrue(gravity_reference_paths(counted))
+        self.assertIsNotNone(compile_explicit_gravity_plan(counted))
+        for spec in (counted.replace("All 12 cells", "All 11 cells"),
+                     SPEC.replace("All cells\nstart empty.", "All 12 cells start empty.")):
+            with self.subTest(spec=spec[-90:]):
+                self.assertFalse(supports_explicit_gravity_review(spec))
+                self.assertEqual(gravity_reference_paths(spec), {})
+                self.assertIsNone(compile_explicit_gravity_plan(spec))
+
     def test_nonempty_initial_board_disables_empty_board_fallback(self):
         variants = (
             SPEC.replace("All cells\nstart empty.",

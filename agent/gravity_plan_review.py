@@ -23,14 +23,21 @@ def _rules(spec):
                 "winner: b", "draw", "finished game", "restart", "cell-row-column")
     if not all(fragment in lower for fragment in required):
         return None
+    size = re.search(r"\b(?:has|is|with)\s+(\d+)\s+columns\s+and\s+(\d+)\s+rows\b", spec, re.I)
+    if not size:
+        return None
+    columns, rows = map(int, size.groups())
+    if not (3 <= columns <= 12 and 3 <= rows <= 12):
+        return None
     # Every replay begins with an empty board. An omitted or contradictory
     # starting position invalidates all generated paths and assertions.
-    if "all cells start empty." not in lower:
+    empty = re.search(r"\ball\s+(?:(\d+)\s+)?cells\s+start\s+empty\.", lower)
+    if not empty or (empty.group(1) and int(empty.group(1)) != columns * rows):
         return None
     initial_marker = r"\b(?:initial(?:ly)?|starting|starts?|begins?|beginning|pre-?filled|pre-?placed|preset)\b"
     board_marker = r"\b(?:board|cells?|tokens?|pieces?)\b"
     if any(re.search(initial_marker, sentence) and re.search(board_marker, sentence)
-           and sentence.strip() != "all cells start empty."
+           and not re.fullmatch(r"all (?:\d+ )?cells start empty\.", sentence.strip())
            for sentence in sentences):
         return None
     # The simulator has a fixed three-token win rule. A bare "three" may mean
@@ -47,12 +54,6 @@ def _rules(spec):
                      or re.search(rf"\b(?:line|row|sequence)\s+of\s+{other}\s+"
                                   r"(?:or\s+more\s+)?tokens?\b", lower))
     if not three_win or competing_win:
-        return None
-    size = re.search(r"\b(?:has|is|with)\s+(\d+)\s+columns\s+and\s+(\d+)\s+rows\b", spec, re.I)
-    if not size:
-        return None
-    columns, rows = map(int, size.groups())
-    if not (3 <= columns <= 12 and 3 <= rows <= 12):
         return None
     return columns, rows
 
