@@ -42,6 +42,28 @@ def assertion(selector, value, op="eq"):
 
 
 class GravityPlanReviewTests(unittest.TestCase):
+    def test_nonempty_initial_board_disables_empty_board_fallback(self):
+        variants = (
+            SPEC.replace("All cells\nstart empty.",
+                         "The initial board already contains an A token in the bottom left cell."),
+            SPEC + "\nInitially, the board contains two pre-placed tokens.\n",
+            SPEC + "\nThe board starts with an A token in the bottom left cell.\n",
+            SPEC + "\nAll cells start empty except one preset B token.\n",
+        )
+        for spec in variants:
+            with self.subTest(spec=spec[-90:]):
+                self.assertFalse(supports_explicit_gravity_review(spec))
+                self.assertEqual(gravity_reference_paths(spec), {})
+                self.assertIsNone(compile_explicit_gravity_plan(spec))
+                self.assertEqual(gravity_plan_conflicts({"tests": []}, spec), [])
+
+    def test_line_of_four_or_more_disables_three_token_fallback(self):
+        spec = SPEC + "\nA win requires a line of four or more tokens.\n"
+        self.assertFalse(supports_explicit_gravity_review(spec))
+        self.assertEqual(gravity_reference_paths(spec), {})
+        self.assertIsNone(compile_explicit_gravity_plan(spec))
+        self.assertEqual(gravity_plan_conflicts({"tests": []}, spec), [])
+
     def test_four_in_a_row_and_conflicting_win_rules_disable_three_in_a_row_logic(self):
         four_to_win = (FOUR_COLUMN_SPEC
                        .replace("three tokens in a contiguous", "four tokens in a contiguous")

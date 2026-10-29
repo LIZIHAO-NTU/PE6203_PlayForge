@@ -16,11 +16,22 @@ def _rules(spec):
         return None
     # Markdown emphasis is formatting, not a change in the game rule.
     spec = re.sub(r"[*_`]", "", spec)
-    lower = spec.lower()
+    lower = re.sub(r"\s+", " ", spec.lower())
+    sentences = re.split(r"(?<=[.!?])\s+", lower)
     required = ("player a starts", "lowest empty cell", "turn passes to the other player",
                 "winner: a",
                 "winner: b", "draw", "finished game", "restart", "cell-row-column")
     if not all(fragment in lower for fragment in required):
+        return None
+    # Every replay begins with an empty board. An omitted or contradictory
+    # starting position invalidates all generated paths and assertions.
+    if "all cells start empty." not in lower:
+        return None
+    initial_marker = r"\b(?:initial(?:ly)?|starting|starts?|begins?|beginning|pre-?filled|pre-?placed|preset)\b"
+    board_marker = r"\b(?:board|cells?|tokens?|pieces?)\b"
+    if any(re.search(initial_marker, sentence) and re.search(board_marker, sentence)
+           and sentence.strip() != "all cells start empty."
+           for sentence in sentences):
         return None
     # The simulator has a fixed three-token win rule. A bare "three" may mean
     # three board rows while the actual win rule is four. Accept only an
@@ -32,7 +43,9 @@ def _rules(spec):
     competing_win = (re.search(rf"\b{other}\s+(?:of\s+(?:their|the)\s+)?tokens?\s+"
                                r"(?:in\s+a\s+contiguous|in\s+a\s+row|in\s+a\s+line)", lower)
                      or re.search(rf"\b{other}\s*(?:-\s*)?(?:token\s+line|in\s+a\s+row)\b", lower)
-                     or re.search(rf"\b(?:win|winning|connect)\s+(?:with|requires?|by)?\s*{other}\b", lower))
+                     or re.search(rf"\b(?:win|winning|connect)\s+(?:with|requires?|by)?\s*{other}\b", lower)
+                     or re.search(rf"\b(?:line|row|sequence)\s+of\s+{other}\s+"
+                                  r"(?:or\s+more\s+)?tokens?\b", lower))
     if not three_win or competing_win:
         return None
     size = re.search(r"\b(?:has|is|with)\s+(\d+)\s+columns\s+and\s+(\d+)\s+rows\b", spec, re.I)
