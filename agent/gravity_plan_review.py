@@ -18,9 +18,22 @@ def _rules(spec):
     spec = re.sub(r"[*_`]", "", spec)
     lower = spec.lower()
     required = ("player a starts", "lowest empty cell", "turn passes to the other player",
-                "three", "horizontal", "vertical", "diagonal", "winner: a",
+                "winner: a",
                 "winner: b", "draw", "finished game", "restart", "cell-row-column")
     if not all(fragment in lower for fragment in required):
+        return None
+    # The simulator has a fixed three-token win rule. A bare "three" may mean
+    # three board rows while the actual win rule is four. Accept only an
+    # explicit matching rule, and abstain on any competing win cardinality.
+    three_win = re.search(
+        r"\b(?:three|3)\s+(?:of\s+(?:their|the)\s+)?tokens?\s+in\s+a\s+contiguous\s+"
+        r"horizontal\s*,\s*vertical\s*,\s*or\s+diagonal\s+line\b", lower)
+    other = r"(?:one|two|four|five|six|seven|eight|nine|ten|[124-9]|1[0-9])"
+    competing_win = (re.search(rf"\b{other}\s+(?:of\s+(?:their|the)\s+)?tokens?\s+"
+                               r"(?:in\s+a\s+contiguous|in\s+a\s+row|in\s+a\s+line)", lower)
+                     or re.search(rf"\b{other}\s*(?:-\s*)?(?:token\s+line|in\s+a\s+row)\b", lower)
+                     or re.search(rf"\b(?:win|winning|connect)\s+(?:with|requires?|by)?\s*{other}\b", lower))
+    if not three_win or competing_win:
         return None
     size = re.search(r"\b(?:has|is|with)\s+(\d+)\s+columns\s+and\s+(\d+)\s+rows\b", spec, re.I)
     if not size:

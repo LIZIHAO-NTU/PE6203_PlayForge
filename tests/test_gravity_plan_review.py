@@ -5,7 +5,8 @@ import unittest
 
 from agent.gravity_plan_review import (compile_explicit_gravity_plan, gravity_plan_conflicts,
                                        gravity_reference_paths,
-                                       repair_explicit_gravity_draw_plan)
+                                       repair_explicit_gravity_draw_plan,
+                                       supports_explicit_gravity_review)
 from agent.contracts import validate_plan
 from agent.runner import run
 from test_mvp import TempTest, FakeClient, config, example_bundle, example_plan, verifier_result
@@ -41,6 +42,23 @@ def assertion(selector, value, op="eq"):
 
 
 class GravityPlanReviewTests(unittest.TestCase):
+    def test_four_in_a_row_and_conflicting_win_rules_disable_three_in_a_row_logic(self):
+        four_to_win = (FOUR_COLUMN_SPEC
+                       .replace("three tokens in a contiguous", "four tokens in a contiguous")
+                       .replace("three-token line", "four-token line"))
+        contradictory = FOUR_COLUMN_SPEC + "\nA player also wins with four in a row.\n"
+        numeric_four = FOUR_COLUMN_SPEC.replace("three tokens in a contiguous",
+                                                "4 tokens in a contiguous")
+        connect_four = FOUR_COLUMN_SPEC + "\nConnect four is the actual win rule.\n"
+        ambiguous = FOUR_COLUMN_SPEC.replace("three tokens in a contiguous",
+                                             "three or four tokens in a contiguous")
+        for spec in (four_to_win, contradictory, numeric_four, connect_four, ambiguous):
+            with self.subTest(spec=spec[-90:]):
+                self.assertFalse(supports_explicit_gravity_review(spec))
+                self.assertEqual(gravity_reference_paths(spec), {})
+                self.assertIsNone(compile_explicit_gravity_plan(spec))
+                self.assertEqual(gravity_plan_conflicts({"tests": []}, spec), [])
+
     def test_compiled_fallback_has_complete_reachable_rule_tests(self):
         plan = compile_explicit_gravity_plan(FOUR_COLUMN_SPEC)
         self.assertIsNotNone(plan)

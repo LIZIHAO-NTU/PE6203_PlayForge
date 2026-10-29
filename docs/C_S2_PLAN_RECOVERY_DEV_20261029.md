@@ -64,3 +64,16 @@ Local raw evidence (not committed to GitHub):
 The independent acceptance file remains outside the Agent workspace and this
 repository. API credentials remain in an ignored local `.env` and are absent
 from this branch.
+
+## Review follow-up: win-length scope
+
+B found that a four-in-a-row variant could still activate the three-in-a-row
+simulator because the earlier recognizer searched for the bare word `three`.
+The recognizer now requires the explicit three-token horizontal, vertical and
+diagonal winning rule. It abstains when a four-token or otherwise competing
+winning rule is present. Counterexamples cover spelled-out four, numeric 4,
+`Connect four`, a contradictory second rule, and an ambiguous three-or-four
+rule. The original S2 specification still activates the guard and compiler.
+No game or acceptance data was used to decide the rule. The three API runs
+above predate this scope correction; see
+`docs/C_S2_THREE_RUNS_REDACTED_20261029.md` for their safe review summary.
