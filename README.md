@@ -1,3 +1,6 @@
+> **New generated game: Knockdown (3D)**  
+> The standalone Python game, original generation traces, run report and launch instructions are available on the **[knockdown-artifacts branch](https://github.com/LIZIHAO-NTU/PE6203_PlayForge/tree/knockdown-artifacts/artifacts/knockdown_native_01)**, under `artifacts/knockdown_native_01/`. See the **[game README](https://github.com/LIZIHAO-NTU/PE6203_PlayForge/blob/knockdown-artifacts/artifacts/knockdown_native_01/README.md)** for setup and controls. The game runs locally in a desktop window, not on GitHub. Recorded status: generated, manual verification pending. These artifacts do not change the main agent implementation or the frozen evaluation results.
+
 # PlayForge: Build a Coding Agent That Can Build a Game
 
 Current version: `1.2.1` — an experimental course-project release, not a production reliability guarantee. Adds bounded multi-issue draft feedback, safe blocked-summary compatibility and a separate controlled real-model repair evaluation. See [RELEASE_1_2_1.md](RELEASE_1_2_1.md) for exact outcomes and unresolved autonomous checks. [RELEASE_1_2.md](RELEASE_1_2.md) preserves the earlier baseline and mixed-rule screening; [EXTENSION_PLAN.md](EXTENSION_PLAN.md) tracks deferred work.
