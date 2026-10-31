@@ -22,6 +22,10 @@ from .diagnostics import route_failure, validate_diagnosis, validate_blocked_rep
 from .evidence import runtime_metadata
 from .lessons import load_lessons, select_hints, record_recovery
 from .plan_review import EXECUTION_CONTRACT, PlanReviewError, inspect_plan, validate_audit, failure_fingerprint
+from .gravity_plan_review import (compile_explicit_gravity_plan, gravity_plan_conflicts,
+                                  gravity_reference_paths,
+                                  repair_explicit_gravity_draw_plan,
+                                  supports_explicit_gravity_review)
 
 
 def verification_score(result):
@@ -147,27 +151,94 @@ def run(config, spec_path, output, max_rounds=3, max_calls=8, max_seconds=600,
         plan_error = None
         plan_details = None
         raw_plan = None
-        for _ in range(2):
+        explicit_plan_conflict = False
+        plan_valid = False
+        use_compiled_fallback = False
+        compiled_candidate = compile_explicit_gravity_plan(spec)
+        verified_gravity_scenarios = gravity_reference_paths(spec)
+        # Explicit gravity plans have a deterministic pre-freeze review that may
+        # reveal a second error after schema validation. Allow one extra draft
+        # within the shared call budget; other tasks keep their established flow.
+        plan_attempt_limit = min(3 if supports_explicit_gravity_review(spec) else 2,
+                                 max(1, max_calls - 1))
+        for attempt_index in range(plan_attempt_limit):
+            rebuild_tests = (attempt_index >= 2 and isinstance(plan_error, str)
+                             and plan_error.startswith("Explicit gravity plan conflicts:"))
+            previous_plan = raw_plan if plan_error else None
+            if rebuild_tests and isinstance(previous_plan, dict):
+                # Repeating an invalid move sequence anchors the next response.
+                # Keep requirements and contracts, but ask for fresh test paths.
+                previous_plan = {key: value for key, value in previous_plan.items() if key != "tests"}
             prompt = json.dumps({"original_spec": spec, "validation_feedback": plan_error,
                                  "validation_details": plan_details,
-                                 "previous_plan": raw_plan if plan_error else None,
+                                 "verified_gravity_scenarios": verified_gravity_scenarios or None,
+                                 "previous_plan": previous_plan,
+                                 "planning_recovery_strategy": (
+                                     "Rebuild test input sequences from the original rules and the initial state; "
+                                     "preserve every mandatory requirement and its verification mode. "
+                                     "Do not reuse the rejected sequences or invent a new expected value. "
+                                     "Split long scenarios into separate fresh-page tests within the step limit. "
+                                     "If an expected result cannot be derived, report that uncertainty; "
+                                     "do not silently downgrade the verification mode."
+                                     if rebuild_tests else None),
                                  "execution_contract": EXECUTION_CONTRACT}, ensure_ascii=False)
             raw_plan = client.ask_json("plan", planning_system, prompt)
             try:
                 plan = validate_plan(raw_plan)
+                corrected, draw_corrections = repair_explicit_gravity_draw_plan(plan, spec)
+                if draw_corrections:
+                    trace.save("draft_gravity_plan.json", plan)
+                    trace.save("gravity_plan_corrections.json", draw_corrections)
+                    summary["gravity_plan_corrections"] = draw_corrections
+                    plan = validate_plan(corrected)
+                gravity_conflicts = gravity_plan_conflicts(plan, spec)
+                if gravity_conflicts:
+                    trace.save("draft_gravity_plan_conflicts.json", gravity_conflicts)
+                    details = "; ".join(
+                        (f"{item['requirement_id']} ({item['test_id']}): no reachable Draw assertion"
+                         if item['kind'] == 'missing_gravity_draw_coverage' else
+                         f"{item['test_id']} step {item['step']} ({item['selector']}): "
+                         f"expected {item['expected']!r}, explicit rules yield {item['actual_from_spec']!r}")
+                        for item in gravity_conflicts[:8])
+                    raise ValueError("Explicit gravity plan conflicts: " + details)
+                plan_valid = True
                 break
             except (ValueError, TypeError, KeyError) as error:
+                explicit_plan_conflict = explicit_plan_conflict or str(error).startswith(
+                    "Explicit gravity plan conflicts:")
                 plan_error = str(error)
                 plan_details = validation_feedback(error, raw_plan)
                 trace.event("plan_validation_failed", error=plan_error, details=plan_details)
-        else:
-            if strict_plan or not isinstance(raw_plan, dict) or raw_plan.get("supported") is not True:
-                raise ValueError("Could not produce a valid test plan: " + str(plan_error))
-            # Keep the original requirements. Only our confidence/acceptance scope degrades.
-            plan = validate_plan(startup_only_plan())
-            summary.update(planning_status="failed_startup_only", planning_error=plan_error)
-            trace.event("planning_degraded", error=plan_error,
-                        decision="Generate original-spec game; startup-only checks are NOT functional acceptance")
+                # API retries count against the same cap. Reserve a generation
+                # call and, when possible, one repair call before retrying a
+                # plan that a bounded rule compiler can already provide.
+                if (max_calls >= 4 and compiled_candidate is not None
+                        and client.calls >= max_calls - 3):
+                    use_compiled_fallback = True
+                    break
+        if not plan_valid:
+            compiled = (compiled_candidate if client.calls < max_calls and
+                        (use_compiled_fallback or plan_attempt_limit >= 3) else None)
+            if compiled is not None:
+                compiled = validate_plan(compiled)
+                if gravity_plan_conflicts(compiled, spec):
+                    raise PlanReviewError("Rule-compiled plan conflicted with the original specification")
+                trace.save("rejected_model_plan.json", raw_plan)
+                trace.event("rule_plan_compiled", reason="Model drafts remained invalid",
+                            prior_error=plan_error)
+                summary.update(planning_origin="explicit_rule_compiler",
+                               planning_status="valid", model_plan_error=plan_error)
+                plan = compiled
+            elif explicit_plan_conflict:
+                raise PlanReviewError("Could not resolve explicit gravity plan conflicts: " + str(plan_error))
+            elif strict_plan or not isinstance(raw_plan, dict) or raw_plan.get("supported") is not True:
+                raise PlanReviewError("Could not produce a valid test plan: " + str(plan_error))
+            else:
+                # Keep the original requirements. Only our confidence/acceptance scope degrades.
+                plan = validate_plan(startup_only_plan())
+                summary.update(planning_status="failed_startup_only", planning_error=plan_error)
+                trace.event("planning_degraded", error=plan_error,
+                            decision="Generate original-spec game; startup-only checks are NOT functional acceptance")
         if summary["planning_status"] == "pending":
             summary["planning_status"] = "valid" if plan["supported"] else "unsupported"
         summary["plan_review"] = inspect_plan(plan, spec)
@@ -193,6 +264,10 @@ def run(config, spec_path, output, max_rounds=3, max_calls=8, max_seconds=600,
                         raise PlanReviewError("Draft plan review is unverified: " + audit["reason"])
                     plan = reviewed
                     summary["plan_review"] = inspect_plan(plan, spec)
+                    audit_conflicts = gravity_plan_conflicts(plan, spec)
+                    if audit_conflicts:
+                        trace.save("audit_gravity_plan_conflicts.json", audit_conflicts)
+                        raise PlanReviewError("Plan audit reintroduced explicit gravity rule conflicts")
                 except Exception as error:
                     summary["plan_audit_status"] = "unverified"
                     summary["plan_audit_error"] = trace.redact(str(error))
@@ -226,6 +301,13 @@ def run(config, spec_path, output, max_rounds=3, max_calls=8, max_seconds=600,
                     "remaining_seconds": max(0, int(deadline - time.monotonic()))}, ensure_ascii=False)
                 response = client.ask_json(f"code_{round_number}", CODER_SYSTEM, prompt)
                 if isinstance(response, dict) and "blocked" in response:
+                    if "summary" in response and (not isinstance(response["summary"], str)
+                                                  or len(response["summary"]) > 1500):
+                        # A malformed optional prose field must not discard valid
+                        # cited diagnosis or the best saved game. Raw API is traced.
+                        summary["blocked_format_warning"] = "Ignored invalid optional blocked summary"
+                        trace.event("blocked_summary_ignored", round=round_number)
+                        response = {k: v for k, v in response.items() if k != "summary"}
                     blocked = validate_blocked_repair(response, feedback, bool(best))
                     summary["repair_blocked"] = blocked
                     trace.event("repair_blocked", **blocked)
