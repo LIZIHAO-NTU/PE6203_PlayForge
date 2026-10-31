@@ -1,0 +1,24 @@
+{
+  "plan": [
+    "Create knockdown/run.sh launcher that resolves paths and uses PLAYFORGE_PYTHON or python3",
+    "Implement 3D math (vectors, perspective projection, camera orbit/tilt) manually",
+    "Implement physics: AABB rigid boxes and sphere, fixed 1/120 step, velocity integration, gravity, friction, restitution, substep collision detection/resolution",
+    "Implement scene layout: table, 16-block wall, ground, 4 trees, 3 rocks, sky gradient",
+    "Implement renderer: filled depth-sorted faces with normal lighting and distance dimming, shadows",
+    "Implement input, ball charging/throwing, reset, quit",
+    "Write README documenting controls and launch",
+    "Print readiness to stderr after first frame"
+  ],
+  "manual_checks": [
+    "Launch via bash knockdown/run.sh and confirm window opens with 3D scene: ground, table, stack of 16 blocks, trees, rocks, sky gradient",
+    "Verify stderr line 'READY: Knockdown playable' appears after first frame",
+    "Test Left/Right arrows orbit the camera fully around",
+    "Test Up/Down arrows adjust camera height/aim",
+    "Hold Space and observe power bar filling over ~1s; release to throw ball from camera direction",
+    "Verify ball flies with gravity, bounces on ground, slows and stops",
+    "Verify impact knocks bottom blocks out and upper blocks fall",
+    "Verify table clear message appears when all blocks have left table top",
+    "Press R during motion and confirm full reset",
+    "Press Q and Escape to quit"
+  ]
+}

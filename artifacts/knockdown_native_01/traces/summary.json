@@ -1,0 +1,20 @@
+{
+  "status": "native_generated_manual_pending",
+  "mode": "native",
+  "model": "deepseek-flash",
+  "usage": {
+    "api_attempts": 1,
+    "prompt_tokens": 2481,
+    "completion_tokens": 7328,
+    "cached_input_tokens": 0,
+    "calls_with_unknown_usage": 0,
+    "estimated_known_usage_cost": null,
+    "currency": "USD",
+    "cost_is_complete": false,
+    "note": "User-supplied rates only; not a billing statement. Unknown calls may be billed."
+  },
+  "window_verified": false,
+  "controls_verified": false,
+  "physics_verified": false,
+  "note": "Source validation only. No claim of playable or completed game."
+}
